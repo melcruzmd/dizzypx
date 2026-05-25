@@ -808,6 +808,20 @@
       color: #2e3e55;
     }
 
+    .flow-node.prompt {
+      min-height: auto;
+      border-width: 2px;
+      border-color: rgba(40, 111, 170, 0.36);
+      background: rgba(224, 241, 255, 0.84);
+      box-shadow: 0 14px 30px rgba(40, 111, 170, 0.10);
+    }
+
+    .flow-node.prompt .flow-chip {
+      color: #1c527c;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(40, 111, 170, 0.16);
+    }
+
     .flow-node strong {
       display: block;
       font-size: 0.98rem;
@@ -1456,12 +1470,22 @@
     }
 
     body[data-layout="mobile"] .top-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
       justify-content: stretch;
     }
 
-    body[data-layout="mobile"] .layout-switch,
-    body[data-layout="mobile"] .top-actions button {
-      flex: 1 1 100%;
+    body[data-layout="mobile"] .layout-switch {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body[data-layout="mobile"] .top-actions > .ghost-button,
+    body[data-layout="mobile"] .top-actions > .primary-button {
+      min-height: 34px;
+      padding: 0 8px;
+      font-size: 0.72rem;
     }
 
     body[data-layout="mobile"] .layout {
@@ -1504,9 +1528,9 @@
     }
 
     body[data-layout="mobile"] .flowchart {
-      gap: 9px;
+      gap: 7px;
       margin-bottom: 12px;
-      padding: 10px;
+      padding: 8px;
     }
 
     body[data-layout="mobile"] .phase-strip {
@@ -1516,9 +1540,9 @@
     }
 
     body[data-layout="mobile"] .phase-pill {
-      min-height: 30px;
+      min-height: 27px;
       padding: 5px;
-      font-size: 0.6rem;
+      font-size: 0.56rem;
       letter-spacing: 0.03em;
     }
 
@@ -1538,26 +1562,75 @@
       display: none;
     }
 
+    body[data-layout="mobile"] .flow-row.start-row {
+      display: none;
+    }
+
     body[data-layout="mobile"] .flow-node,
     body[data-layout="mobile"] .flow-node.final {
       min-height: auto;
-      padding: 12px 72px 12px 11px;
-      gap: 5px;
+      padding: 7px 60px 7px 8px;
+      gap: 2px;
       border-radius: var(--radius-sm);
     }
 
+    body[data-layout="mobile"] button.flow-node {
+      padding-right: 60px;
+    }
+
+    body[data-layout="mobile"] button.flow-node::after {
+      top: 8px;
+      right: 8px;
+      min-height: 19px;
+      padding: 0 6px;
+      font-size: 0.54rem;
+      letter-spacing: 0.03em;
+    }
+
+    body[data-layout="mobile"] .flow-node.selected:not(.treatment),
+    body[data-layout="mobile"] .flow-node.inactive {
+      min-height: 46px;
+    }
+
+    body[data-layout="mobile"] .flow-node.active {
+      min-height: 52px;
+    }
+
+    body[data-layout="mobile"] .flow-node.prompt {
+      padding-right: 9px;
+      border-style: dashed;
+    }
+
+    body[data-layout="mobile"] .flow-node.treatment {
+      padding: 10px;
+      gap: 5px;
+    }
+
     body[data-layout="mobile"] .flow-node strong {
-      font-size: 0.9rem;
+      font-size: 0.77rem;
+      line-height: 1.12;
     }
 
     body[data-layout="mobile"] .flow-node span {
-      font-size: 0.76rem;
-      line-height: 1.34;
+      font-size: 0.64rem;
+      line-height: 1.2;
+    }
+
+    body[data-layout="mobile"] .flow-node:not(.prompt):not(.treatment) span:not(.flow-chip) {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    body[data-layout="mobile"] .flow-node.inactive span:not(.flow-chip) {
+      -webkit-line-clamp: 1;
     }
 
     body[data-layout="mobile"] .flow-chip {
-      min-height: 20px;
-      font-size: 0.56rem;
+      min-height: 18px;
+      padding: 0 6px;
+      font-size: 0.52rem;
     }
 
     body[data-layout="mobile"] .stage-head {
@@ -2582,10 +2655,10 @@
       });
     }
 
-    function flowNode({ title, text, chip, action, selected, active, inactive, final, treatment }) {
+    function flowNode({ title, text, chip, action, selected, active, inactive, final, treatment, prompt }) {
       const tag = action ? "button" : "div";
       const actionAttr = action ? ` type="button" data-flow-action="${action}"` : "";
-      return `<${tag}${actionAttr} class="flow-node ${selected ? "selected" : ""} ${active ? "active" : ""} ${inactive ? "inactive" : ""} ${final ? "final" : ""} ${treatment ? "treatment" : ""}">
+      return `<${tag}${actionAttr} class="flow-node ${selected ? "selected" : ""} ${active ? "active" : ""} ${inactive ? "inactive" : ""} ${final ? "final" : ""} ${treatment ? "treatment" : ""} ${prompt ? "prompt" : ""}">
         <span class="flow-chip">${chip}</span>
         <strong>${title}</strong>
         <span>${text}</span>
@@ -2659,6 +2732,45 @@
         </div>`;
     }
 
+    function examPromptForSyndrome(id, phase = "initial") {
+      if (id === "tev" && phase === "dh") {
+        return flowNode({
+          title: "Do Dix-Hallpike now",
+          text: "Before choosing an endpoint, perform Dix-Hallpike and classify the nystagmus as typical, atypical, or absent.",
+          chip: "required exam",
+          prompt: true
+        });
+      }
+      if (id === "tev" && phase === "orthostatic") {
+        return flowNode({
+          title: "Measure orthostatic vitals now",
+          text: "After a negative Dix-Hallpike, check standing blood pressure and pulse response. Use supine roll if horizontal canal BPPV is suspected.",
+          chip: "required exam",
+          prompt: true
+        });
+      }
+      const prompts = {
+        sev: {
+          title: "Take targeted spontaneous-episode history now",
+          text: "Before choosing a branch, check migraine/Meniere pattern, vascular warning features, ABCD2 risk factors, and systemic symptoms.",
+          chip: "required history"
+        },
+        tavs: {
+          title: "Take targeted exposure history now",
+          text: "Before choosing a branch, look for head or neck trauma, barotrauma, toxins, ototoxic medications, infection, or systemic exposure.",
+          chip: "required history"
+        },
+        savs: {
+          title: "Do HINTS / HINTS plus now",
+          text: "Use only for continuous acute vestibular syndrome with spontaneous nystagmus. Check head impulse, nystagmus direction, skew, new hearing loss, and gait/truncal ataxia.",
+          chip: "required exam"
+        }
+      };
+      const prompt = prompts[id];
+      if (!prompt) return "";
+      return flowNode({ ...prompt, prompt: true });
+    }
+
     function bindFlowActions() {
       algorithmStrip.querySelectorAll("[data-flow-action]").forEach(node => {
         node.addEventListener("click", () => {
@@ -2701,6 +2813,9 @@
         if (selectedSyndrome === "tev") {
           if (!state.examResult && !state.finding) {
             return `<div class="flow-connector"><span></span><span></span></div>
+              <div class="flow-row one">
+                ${examPromptForSyndrome("tev", "dh")}
+              </div>
               <div class="flow-row three">
                 ${flowNode({
                   title: "Dix-Hallpike positive: typical nystagmus",
@@ -2731,6 +2846,9 @@
 
           if (state.examResult === "dh-negative" && !state.finding) {
             return `<div class="flow-connector"><span></span><span></span></div>
+              <div class="flow-row one">
+                ${examPromptForSyndrome("tev", "orthostatic")}
+              </div>
               <div class="flow-row three">
                 ${flowNode({
                   title: "Orthostatic vital signs positive",
@@ -2761,7 +2879,11 @@
 
           const selectedItem = findings.tev.find(item => item.id === state.finding);
           if (!selectedItem) return "";
+          const promptPhase = state.examResult === "dh-negative" ? "orthostatic" : "dh";
           return `<div class="flow-connector"><span></span><span></span></div>
+            <div class="flow-row one">
+              ${examPromptForSyndrome("tev", promptPhase)}
+            </div>
             <div class="flow-row one">
               ${flowNode({
                 title: selectedItem.label,
@@ -2787,13 +2909,16 @@
         const item = selectedFinding();
 
         return `<div class="flow-connector"><span></span><span></span></div>
+          <div class="flow-row one">
+            ${examPromptForSyndrome(selectedSyndrome)}
+          </div>
           <div class="flow-row four">${nodes}</div>
           ${state.finding ? renderTreatmentNode(item) : ""}`;
       }
 
       algorithmStrip.innerHTML = `<div class="flowchart" aria-label="Interactive TiTrATE flowchart">
         ${renderPhaseStrip()}
-        <div class="flow-row one">
+        <div class="flow-row one start-row">
           ${flowNode({
             title: "Recent-onset dizziness",
             text: "Start with syndrome pattern: timing, then triggers, then targeted examination.",
@@ -3101,3 +3226,4 @@
   </script>
 </body>
 </html>
+
