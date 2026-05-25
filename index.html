@@ -1,0 +1,2735 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Approach to the Dizzy Patient</title>
+  <style>
+    :root {
+      --bg-1: #eaf5f7;
+      --bg-2: #f7fbfc;
+      --ink: #12222b;
+      --ink-soft: #405862;
+      --muted: #667c86;
+      --line: rgba(72, 107, 120, 0.22);
+      --glass: rgba(255, 255, 255, 0.56);
+      --glass-strong: rgba(255, 255, 255, 0.76);
+      --teal: #0d8f8b;
+      --teal-dark: #086d70;
+      --cyan: #2ab7ca;
+      --amber: #c9821d;
+      --red: #c44e4e;
+      --green: #23856c;
+      --shadow: 0 24px 80px rgba(23, 58, 70, 0.16);
+      --shadow-soft: 0 14px 40px rgba(23, 58, 70, 0.10);
+      --radius: 8px;
+      --radius-sm: 6px;
+      --focus: 0 0 0 4px rgba(13, 143, 139, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(42, 183, 202, 0.20), transparent 32rem),
+        radial-gradient(circle at 86% 12%, rgba(13, 143, 139, 0.16), transparent 30rem),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2) 54%, #eef8f5);
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.34) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.26) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--teal-dark);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .app-shell {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.48);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: white;
+      background: linear-gradient(145deg, var(--teal), #235e8b);
+      box-shadow: 0 14px 28px rgba(13, 143, 139, 0.24);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2vw, 1.8rem);
+      line-height: 1.08;
+      font-weight: 760;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.35;
+      max-width: 780px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .algorithm-label {
+      width: max-content;
+      max-width: 100%;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 9px 12px;
+      border: 1px solid rgba(13, 143, 139, 0.24);
+      border-radius: var(--radius);
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.62);
+      box-shadow: var(--shadow-soft);
+      font-size: 0.82rem;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .mode-tabs {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+      gap: 6px;
+      margin-top: 18px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.46);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .mode-tab {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      background: transparent;
+      font-size: 0.88rem;
+      font-weight: 780;
+    }
+
+    .mode-tab.active {
+      color: white;
+      background: linear-gradient(145deg, var(--teal), var(--teal-dark));
+      box-shadow: 0 12px 24px rgba(13, 143, 139, 0.18);
+    }
+
+    .ghost-button,
+    .primary-button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 720;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .primary-button {
+      color: white;
+      background: linear-gradient(145deg, var(--teal), var(--teal-dark));
+      box-shadow: 0 14px 26px rgba(13, 143, 139, 0.22);
+    }
+
+    .ghost-button {
+      color: var(--teal-dark);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.46);
+    }
+
+    .ghost-button:hover,
+    .primary-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .ghost-button:focus-visible,
+    .primary-button:focus-visible,
+    .mode-tab:focus-visible,
+    .choice-card:focus-visible,
+    .micro-option:focus-visible,
+    .tab:focus-visible,
+    summary:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 274px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin-top: 18px;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .rail {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+    }
+
+    .rail-title,
+    .panel-title {
+      margin: 0 0 14px;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      font-weight: 780;
+      color: var(--teal-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .progress-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .progress-item {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 11px;
+      align-items: start;
+      padding: 11px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      text-align: left;
+      background: transparent;
+    }
+
+    .progress-item.active {
+      color: var(--ink);
+      border-color: var(--line);
+      background: rgba(255,255,255,0.52);
+    }
+
+    .progress-item.clickable {
+      cursor: pointer;
+    }
+
+    .progress-item.clickable:hover {
+      color: var(--ink);
+      border-color: rgba(13, 143, 139, 0.34);
+      background: rgba(255,255,255,0.62);
+    }
+
+    .progress-item.locked {
+      cursor: not-allowed;
+      opacity: 0.72;
+    }
+
+    .progress-item.done .step-dot {
+      background: var(--green);
+      color: white;
+      border-color: transparent;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: rgba(255,255,255,0.38);
+      color: inherit;
+    }
+
+    .progress-item strong {
+      display: block;
+      margin: 1px 0 2px;
+      font-size: 0.91rem;
+      line-height: 1.2;
+      color: inherit;
+    }
+
+    .progress-item span {
+      display: block;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .rail-note {
+      margin: 18px 0 0;
+      padding: 12px;
+      border: 1px solid rgba(201, 130, 29, 0.28);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 250, 237, 0.64);
+      color: #67440e;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .main-panel {
+      overflow: hidden;
+    }
+
+    .stage {
+      padding: clamp(18px, 3vw, 30px);
+      min-height: 636px;
+    }
+
+    .stage-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stage h2 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3vw, 3.2rem);
+      line-height: 1.02;
+      font-weight: 790;
+      max-width: 860px;
+    }
+
+    .stage-subtitle {
+      max-width: 830px;
+      margin: 12px 0 0;
+      color: var(--ink-soft);
+      font-size: clamp(1rem, 1.35vw, 1.12rem);
+      line-height: 1.62;
+    }
+
+    .path-label {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--teal-dark);
+      background: rgba(255,255,255,0.54);
+      font-size: 0.82rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .path-label span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .choice-card {
+      display: grid;
+      align-content: start;
+      min-height: 228px;
+      padding: 20px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.58);
+      box-shadow: 0 16px 38px rgba(23, 58, 70, 0.09);
+      transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, background 170ms ease;
+    }
+
+    .choice-card:hover,
+    .choice-card.selected {
+      transform: translateY(-2px);
+      border-color: rgba(13, 143, 139, 0.42);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 20px 48px rgba(23, 58, 70, 0.14);
+    }
+
+    .choice-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .choice-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: var(--teal-dark);
+      background: linear-gradient(145deg, rgba(42,183,202,0.16), rgba(13,143,139,0.10));
+    }
+
+    .choice-kicker {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .choice-card h3 {
+      margin: 0 0 10px;
+      font-size: clamp(1.28rem, 2vw, 1.78rem);
+      line-height: 1.1;
+      font-weight: 790;
+    }
+
+    .choice-card p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    .choice-footer {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--teal-dark);
+      font-size: 0.86rem;
+      font-weight: 760;
+    }
+
+    .arrow {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--teal);
+    }
+
+    .algorithm-strip {
+      display: block;
+      margin-top: 20px;
+    }
+
+    .algo-tile {
+      min-height: 86px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.42);
+    }
+
+    .algo-tile.active {
+      border-color: rgba(13, 143, 139, 0.46);
+      background: rgba(229, 250, 248, 0.70);
+    }
+
+    .algo-tile strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 0.86rem;
+      line-height: 1.2;
+    }
+
+    .algo-tile span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.35;
+    }
+
+    .flowchart {
+      display: grid;
+      gap: 14px;
+      margin-top: 22px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.40);
+    }
+
+    .phase-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.42);
+    }
+
+    .phase-pill {
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      background: rgba(255,255,255,0.48);
+      font-size: 0.72rem;
+      line-height: 1.18;
+      font-weight: 830;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .phase-pill.active {
+      color: white;
+      border-color: transparent;
+      background: linear-gradient(145deg, var(--teal), var(--teal-dark));
+      box-shadow: 0 12px 24px rgba(13, 143, 139, 0.18);
+    }
+
+    .phase-pill.done {
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.74);
+    }
+
+    .flow-row {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .flow-row.one {
+      grid-template-columns: minmax(220px, 0.42fr);
+      justify-content: center;
+    }
+
+    .flow-row.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .flow-row.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .flow-row.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .flow-connector {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 24px;
+      pointer-events: none;
+    }
+
+    .flow-connector span {
+      position: relative;
+      display: block;
+      min-height: 24px;
+    }
+
+    .flow-connector span::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 1px;
+      height: 24px;
+      background: var(--line);
+    }
+
+    .flow-connector span::after {
+      content: "";
+      position: absolute;
+      top: 23px;
+      left: 25%;
+      right: 25%;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .flow-node {
+      min-height: 104px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      text-align: left;
+      background: rgba(255,255,255,0.62);
+      box-shadow: 0 12px 28px rgba(23, 58, 70, 0.07);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+    }
+
+    .flow-node button,
+    button.flow-node {
+      cursor: pointer;
+    }
+
+    .flow-node:hover,
+    button.flow-node:hover {
+      transform: translateY(-1px);
+      border-color: rgba(13, 143, 139, 0.44);
+      background: rgba(255,255,255,0.78);
+    }
+
+    .flow-node.selected {
+      border-color: rgba(13, 143, 139, 0.58);
+      background: rgba(226, 249, 247, 0.78);
+      box-shadow: 0 16px 34px rgba(13, 143, 139, 0.14);
+    }
+
+    .flow-node.active {
+      border-color: rgba(201, 130, 29, 0.44);
+      background: rgba(255, 249, 236, 0.78);
+    }
+
+    .flow-node.inactive {
+      opacity: 0.45;
+    }
+
+    .flow-node.final {
+      min-height: 120px;
+    }
+
+    .flow-node.treatment {
+      border-color: rgba(35, 133, 108, 0.38);
+      background: rgba(231, 250, 239, 0.78);
+    }
+
+    .flow-node strong {
+      display: block;
+      font-size: 0.98rem;
+      line-height: 1.18;
+    }
+
+    .flow-node span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      line-height: 1.38;
+    }
+
+    .flow-chip {
+      width: max-content;
+      max-width: 100%;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: var(--teal-dark);
+      background: rgba(13,143,139,0.10);
+      font-size: 0.68rem;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .flow-hint {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .map-node::after {
+      content: "→";
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 900;
+      z-index: 2;
+    }
+
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--teal-dark);
+      font-weight: 850;
+      border-bottom: 1px dotted currentColor;
+      cursor: help;
+    }
+
+    .info-tip::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 10px);
+      width: min(330px, 78vw);
+      padding: 10px;
+      border: 1px solid rgba(13, 143, 139, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--ink);
+      background: rgba(255,255,255,0.96);
+      box-shadow: var(--shadow-soft);
+      font-size: 0.76rem;
+      line-height: 1.42;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 140ms ease, transform 140ms ease;
+      z-index: 10;
+    }
+
+    .info-tip:hover::after,
+    .info-tip:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .exam-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .micro-option {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      width: 100%;
+      min-height: 92px;
+      padding: 16px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: rgba(255,255,255,0.56);
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .micro-option:hover,
+    .micro-option.selected {
+      transform: translateY(-1px);
+      border-color: rgba(13, 143, 139, 0.46);
+      background: rgba(255,255,255,0.75);
+    }
+
+    .option-symbol {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      color: white;
+      background: linear-gradient(145deg, var(--teal), #276b94);
+    }
+
+    .micro-option strong {
+      display: block;
+      margin: 0 0 5px;
+      font-size: 0.98rem;
+      line-height: 1.25;
+    }
+
+    .micro-option span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .severity {
+      min-width: 84px;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 820;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(35,133,108,0.10);
+      color: var(--green);
+    }
+
+    .severity.caution {
+      background: rgba(201,130,29,0.13);
+      color: var(--amber);
+    }
+
+    .severity.urgent {
+      background: rgba(196,78,78,0.13);
+      color: var(--red);
+    }
+
+    .result-panel {
+      margin-top: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(13, 143, 139, 0.26);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.70);
+    }
+
+    .result-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 18px;
+      background: linear-gradient(145deg, rgba(229,250,248,0.88), rgba(255,255,255,0.36));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-header p,
+    .result-body p {
+      margin: 0;
+      color: var(--ink-soft);
+      line-height: 1.56;
+    }
+
+    .result-header h3 {
+      margin: 0 0 7px;
+      font-size: clamp(1.2rem, 2vw, 1.55rem);
+      line-height: 1.15;
+    }
+
+    .result-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .result-block {
+      padding: 18px;
+    }
+
+    .result-block + .result-block {
+      border-left: 1px solid var(--line);
+    }
+
+    .result-block h4 {
+      margin: 0 0 10px;
+      font-size: 0.83rem;
+      line-height: 1.2;
+      color: var(--teal-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .result-list {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .result-list li {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 8px;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.42;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--teal-dark);
+      background: rgba(13, 143, 139, 0.11);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .resource-panel {
+      margin-top: 18px;
+      padding: clamp(18px, 3vw, 26px);
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .resource-grid > * {
+      min-width: 0;
+    }
+
+    .resource-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.46);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.38);
+    }
+
+    .tab {
+      min-height: 34px;
+      border-radius: 5px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 0.78rem;
+      font-weight: 760;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--teal);
+      box-shadow: 0 10px 22px rgba(13, 143, 139, 0.17);
+    }
+
+    .note-pane {
+      display: none;
+      animation: fadeIn 180ms ease both;
+    }
+
+    .note-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .definition-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .definition-list li {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.42);
+    }
+
+    .definition-list strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 0.88rem;
+    }
+
+    .definition-list span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.44;
+    }
+
+    .exam-guide {
+      display: grid;
+      gap: 12px;
+    }
+
+    .exam-card {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.48);
+    }
+
+    .exam-card h3 {
+      margin: 0 0 6px;
+      color: var(--ink);
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .exam-card p {
+      margin: 0 0 10px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.48;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding-left: 22px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .step-list li::marker {
+      color: var(--teal-dark);
+      font-weight: 800;
+    }
+
+    .exam-note {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      color: #67440e;
+      background: rgba(255, 250, 237, 0.72);
+      border: 1px solid rgba(201, 130, 29, 0.26);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .exam-note strong {
+      color: #67440e;
+    }
+
+    .exam-checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .exam-checks div {
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(229, 250, 248, 0.46);
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+      line-height: 1.38;
+    }
+
+    .exam-checks strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--teal-dark);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .table-wrap {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.50);
+    }
+
+    .exam-table {
+      width: 100%;
+      min-width: 560px;
+      border-collapse: collapse;
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+      line-height: 1.38;
+    }
+
+    .exam-table th,
+    .exam-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .exam-table th {
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.62);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .exam-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .exam-table th:last-child,
+    .exam-table td:last-child {
+      border-right: 0;
+    }
+
+    .exam-table strong {
+      color: var(--ink);
+    }
+
+    .discussion {
+      margin-top: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.43);
+      overflow: hidden;
+    }
+
+    summary {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px;
+      color: var(--ink);
+      font-weight: 760;
+      font-size: 0.88rem;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details p {
+      margin: 0;
+      padding: 0 12px 12px;
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .sources {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 18px;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      line-height: 1.44;
+    }
+
+    .reference-band {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.42);
+    }
+
+    .reference-band h2 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+
+    .bottom-section {
+      margin-top: 18px;
+      padding: clamp(18px, 3vw, 26px);
+    }
+
+    .bottom-section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.4rem, 2.4vw, 2rem);
+      line-height: 1.12;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .matrix-card {
+      min-height: 168px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.52);
+    }
+
+    .matrix-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      line-height: 1.18;
+    }
+
+    .matrix-card p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.48;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .site-footer {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink-soft);
+      background: rgba(255,255,255,0.46);
+      box-shadow: var(--shadow-soft);
+      text-align: center;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .site-footer strong {
+      color: var(--teal-dark);
+    }
+
+    .site-footer a {
+      display: block;
+      width: max-content;
+      max-width: 100%;
+      margin: 4px auto 0;
+      color: var(--teal-dark);
+      font-weight: 780;
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+      }
+
+      .resource-grid,
+      .matrix {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      .app-shell {
+        padding: 12px;
+      }
+
+      .topbar,
+      .layout,
+      .result-header {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .brand {
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+      }
+
+      .brand h1 {
+        font-size: 1.24rem;
+        line-height: 1.15;
+      }
+
+      .brand p {
+        margin-top: 6px;
+        font-size: 0.86rem;
+        line-height: 1.45;
+      }
+
+      .algorithm-label {
+        margin-top: 12px;
+        padding: 10px 12px;
+      }
+
+      .mode-tabs {
+        margin-top: 10px;
+      }
+
+      .stage-head {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .top-actions button {
+        flex: 1 1 140px;
+      }
+
+      .rail {
+        position: static;
+      }
+
+      .stage {
+        min-height: auto;
+        padding: 16px;
+      }
+
+      .stage h2 {
+        font-size: 1.5rem;
+        line-height: 1.15;
+      }
+
+      .stage-subtitle {
+        font-size: 0.94rem;
+        line-height: 1.5;
+      }
+
+      .choice-grid,
+      .algorithm-strip,
+      .flow-row.two,
+      .flow-row.three,
+      .flow-row.four,
+      .flow-connector,
+      .result-body,
+      .exam-checks,
+      .resource-grid,
+      .matrix {
+        grid-template-columns: 1fr;
+      }
+
+      .mode-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+      }
+
+      .flowchart {
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px;
+      }
+
+      .phase-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        padding: 6px;
+      }
+
+      .phase-pill {
+        min-height: 32px;
+        padding: 5px;
+        font-size: 0.62rem;
+        letter-spacing: 0.03em;
+      }
+
+      .flow-row {
+        gap: 10px;
+      }
+
+      .flow-row.one {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-node,
+      .flow-node.final {
+        min-height: auto;
+        padding: 12px;
+        gap: 6px;
+      }
+
+      .flow-node strong {
+        font-size: 0.92rem;
+      }
+
+      .flow-node span {
+        font-size: 0.77rem;
+        line-height: 1.35;
+      }
+
+      .flow-chip {
+        min-height: 21px;
+        font-size: 0.58rem;
+      }
+
+      .flow-hint {
+        font-size: 0.76rem;
+      }
+
+      .flow-connector {
+        display: none;
+      }
+
+      .result-panel {
+        margin-top: 14px;
+      }
+
+      .result-header,
+      .result-block {
+        padding: 14px;
+      }
+
+      .result-block + .result-block {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .path-label {
+        justify-self: start;
+        white-space: normal;
+      }
+
+      .choice-card {
+        min-height: 190px;
+      }
+
+      .micro-option {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .severity {
+        grid-column: 2;
+        justify-self: start;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .top-actions {
+        gap: 8px;
+      }
+
+      .top-actions button,
+      .mode-tab {
+        min-height: 38px;
+        padding-inline: 10px;
+        font-size: 0.78rem;
+      }
+
+      .layout {
+        gap: 12px;
+      }
+
+      .rail,
+      .stage,
+      .resource-panel,
+      .resource-card,
+      .site-footer {
+        border-radius: var(--radius-sm);
+      }
+
+      .rail,
+      .resource-panel,
+      .resource-card {
+        padding: 12px;
+      }
+
+      .rail-step {
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .choice-card,
+      .micro-option {
+        min-height: auto;
+        padding: 13px;
+      }
+
+      .tabs {
+        gap: 4px;
+      }
+
+      .tab {
+        min-height: 32px;
+        font-size: 0.72rem;
+      }
+
+      .exam-card {
+        padding: 12px;
+      }
+
+      .exam-table {
+        min-width: 470px;
+        font-size: 0.72rem;
+      }
+
+      .exam-table th,
+      .exam-table td {
+        padding: 8px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar" aria-label="Application header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3v18M5 8h14M7 16h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 8c0 2.8 1.8 5 4 5s4-2.2 4-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Approach to the Dizzy Patient</h1>
+          <p>Using the TiTrATE algorithm for recent-onset dizziness: timing, triggers, and targeted bedside examination.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button" type="button" id="resetBtn" title="Reset the navigator">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Reset
+        </button>
+        <button class="primary-button" type="button" id="learnBtn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 19.5V5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2.5ZM8 7h6M8 11h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Teaching Notes
+        </button>
+      </div>
+    </header>
+
+    <div class="algorithm-label">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 4h12v5H6zM4 15h7v5H4zM13 15h7v5h-7zM12 9v3M8 12h8M8 12v3M16 12v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      TiTrATE Algorithm
+    </div>
+
+    <nav class="mode-tabs" aria-label="Application views">
+      <button class="mode-tab active" type="button" data-view="algorithm">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 4h12v5H6zM4 15h7v5H4zM13 15h7v5h-7zM12 9v3M8 12h8M8 12v3M16 12v3" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+        Algorithm
+      </button>
+      <button class="mode-tab" type="button" data-view="learn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 19.5V5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2.5ZM8 7h6M8 11h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Learn
+      </button>
+    </nav>
+
+    <main class="layout" id="algorithmView">
+      <aside class="rail glass" aria-label="TiTrATE progress">
+        <h2 class="rail-title">Algorithm Path</h2>
+        <ol class="progress-list" id="progressList"></ol>
+        <p class="rail-note">This app follows TiTrATE logic for recent-onset dizziness. It is educational decision support and does not replace emergency evaluation or clinician judgment.</p>
+      </aside>
+
+      <section class="main-panel glass" aria-live="polite">
+        <div class="stage">
+          <div class="stage-head">
+            <div>
+              <h2 id="stageTitle"></h2>
+              <p class="stage-subtitle" id="stageSubtitle"></p>
+            </div>
+            <div class="path-label" id="pathLabel">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              New case
+            </div>
+          </div>
+
+          <div id="choiceArea"></div>
+          <div class="algorithm-strip" id="algorithmStrip" aria-label="TiTrATE syndrome map"></div>
+
+          <div id="resultArea"></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="resource-panel glass hidden" id="learnView" aria-label="Instructional notes">
+      <div class="resource-grid">
+        <div class="resource-card">
+          <h2 class="panel-title">Instruction Panel</h2>
+        <div class="tabs" role="tablist" aria-label="Instruction topics">
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="defs">Terms</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="exam">Exam</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="sources">Sources</button>
+        </div>
+
+        <div class="note-pane active" id="tab-defs" role="tabpanel">
+          <ul class="definition-list">
+            <li><strong>Timing</strong><span>Classify the dizziness by duration and pattern: episodic attacks versus continuous symptoms lasting hours to days.</span></li>
+            <li><strong>Triggers</strong><span>A true trigger reliably starts an attack from baseline. Movement that merely worsens ongoing dizziness is an exacerbator.</span></li>
+            <li><strong>Targeted exam</strong><span>The bedside test depends on the vestibular syndrome: positional tests for triggered episodic cases, HINTS-family exam for acute vestibular syndrome.</span></li>
+            <li><strong>ABCD2 risk factors</strong><span>Age 60 years or older, blood pressure at presentation at least 140 systolic or 90 diastolic, clinical features of unilateral weakness or speech disturbance, symptom duration, and diabetes. Scores range from 0 to 7; in the TiTrATE map, ABCD2 greater than 3 increases concern for TIA/stroke workup.</span></li>
+          </ul>
+        </div>
+
+        <div class="note-pane" id="tab-exam" role="tabpanel">
+          <div class="exam-guide">
+            <article class="exam-card">
+              <h3>Dix-Hallpike Maneuver</h3>
+              <p>Use when the story is brief, position-triggered episodic dizziness, especially rolling in bed, looking up, or bending. It tests mainly for posterior canal BPPV.</p>
+              <ol class="step-list">
+                <li>Start with the patient seated upright on the exam table, legs extended or ready to be lowered backward.</li>
+                <li>Turn the head 45 degrees toward the ear you are testing.</li>
+                <li>Support the head and quickly bring the patient back to a supine head-hanging position, with the neck extended about 20 degrees below horizontal.</li>
+                <li>Keep the eyes open and observe for at least 30 to 60 seconds. Ask whether this reproduces the typical spell.</li>
+                <li>Bring the patient back to sitting and observe again; then repeat on the other side if needed.</li>
+              </ol>
+              <div class="exam-checks">
+                <div><strong>Peripheral BPPV pattern</strong>Brief latency, transient upbeat-torsional nystagmus, fatigues, usually resolves within 60 seconds.</div>
+                <div><strong>Concerning pattern</strong>Persistent, downbeat, purely vertical, direction-changing, or non-fatiguing nystagmus suggests central positional vertigo.</div>
+              </div>
+              <div class="table-wrap">
+                <table class="exam-table">
+                  <thead>
+                    <tr><th>Observation</th><th>Expected / normal</th><th>Abnormal pattern</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Symptoms</td><td>No vertigo or only nonspecific discomfort.</td><td>Typical brief vertigo reproduced by the maneuver.</td></tr>
+                    <tr><td>Latency</td><td>No nystagmus.</td><td>Posterior canal BPPV often has a short latency before nystagmus begins.</td></tr>
+                    <tr><td>Nystagmus</td><td>Absent.</td><td>Upbeat-torsional nystagmus toward the lower ear supports posterior canal BPPV.</td></tr>
+                    <tr><td>Duration</td><td>No provoked nystagmus.</td><td>Canalithiasis pattern is transient, commonly under 60 seconds; persistent or vertical/downbeat patterns are concerning.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="exam-note"><strong>Do not use casually:</strong> Avoid or modify when neck instability, severe cervical disease, suspected vertebrobasilar insufficiency, or inability to tolerate head extension is present.</div>
+            </article>
+
+            <article class="exam-card">
+              <h3>Supine Roll Test</h3>
+              <p>Use when brief positional attacks suggest horizontal canal BPPV, especially if Dix-Hallpike is negative or horizontal nystagmus is suspected.</p>
+              <ol class="step-list">
+                <li>Place the patient supine and flex the head about 20 to 30 degrees so the horizontal canals are aligned.</li>
+                <li>Rapidly turn the head 90 degrees to one side and observe the eyes for horizontal nystagmus and symptom reproduction.</li>
+                <li>Return the head to center and let symptoms settle.</li>
+                <li>Rapidly turn the head 90 degrees to the opposite side and compare intensity and direction.</li>
+              </ol>
+              <div class="exam-checks">
+                <div><strong>Geotropic pattern</strong>Nystagmus beats toward the ground; the stronger side often indicates the affected ear.</div>
+                <div><strong>Apogeotropic pattern</strong>Nystagmus beats away from the ground; interpretation differs and may require vestibular expertise.</div>
+              </div>
+              <div class="table-wrap">
+                <table class="exam-table">
+                  <thead>
+                    <tr><th>Observation</th><th>Expected / normal</th><th>Abnormal pattern</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Symptoms</td><td>No typical vertigo provoked by either head turn.</td><td>Brief vertigo reproduced when rolling the head to one or both sides.</td></tr>
+                    <tr><td>Nystagmus</td><td>No horizontal positional nystagmus.</td><td>Horizontal geotropic or apogeotropic nystagmus suggests horizontal canal BPPV.</td></tr>
+                    <tr><td>Side comparison</td><td>No meaningful asymmetry.</td><td>Intensity differs by side; the stronger side helps localize in geotropic canalithiasis.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="exam-card">
+              <h3>Orthostatic Vital Signs</h3>
+              <p>Use when standing reliably triggers lightheadedness, faintness, or presyncope. This is a triggered episodic pathway, but not a positional vertigo maneuver.</p>
+              <ol class="step-list">
+                <li>Have the patient rest supine for about 5 minutes when feasible.</li>
+                <li>Measure blood pressure and pulse while supine.</li>
+                <li>Have the patient stand safely with support available.</li>
+                <li>Repeat blood pressure and pulse at about 1 minute and again at 3 minutes.</li>
+                <li>Record symptoms during the measurement: dizziness, faintness, visual dimming, palpitations, or weakness.</li>
+              </ol>
+              <div class="exam-checks">
+                <div><strong>Supports orthostasis</strong>Symptoms are reproduced with a significant blood pressure drop or abnormal pulse response.</div>
+                <div><strong>Think broader</strong>Syncope, exertional symptoms, chest pain, or palpitations should prompt cardiac or systemic evaluation.</div>
+              </div>
+              <div class="table-wrap">
+                <table class="exam-table">
+                  <thead>
+                    <tr><th>Measure</th><th>Expected / normal</th><th>Abnormal threshold</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Systolic BP</td><td>Falls less than 20 mm Hg after standing.</td><td>Drop of 20 mm Hg or more within 3 minutes supports orthostatic hypotension.</td></tr>
+                    <tr><td>Diastolic BP</td><td>Falls less than 10 mm Hg after standing.</td><td>Drop of 10 mm Hg or more within 3 minutes supports orthostatic hypotension.</td></tr>
+                    <tr><td>Heart rate response</td><td>Mild compensatory rise can occur after standing.</td><td>With orthostatic BP drop, a small HR rise may suggest neurogenic OH; a larger compensatory rise suggests volume depletion or non-neurogenic causes.</td></tr>
+                    <tr><td>POTS screen in adults</td><td>No sustained excessive tachycardia with standing.</td><td>Sustained HR increase of 30 bpm or more within 10 minutes without orthostatic hypotension suggests POTS physiology.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="exam-card">
+              <h3>HINTS Plus</h3>
+              <p>Use only for spontaneous acute vestibular syndrome: continuous dizziness or vertigo, nausea/gait unsteadiness, and spontaneous nystagmus while symptomatic. It is not for resolved spells or isolated brief positional dizziness.</p>
+              <ol class="step-list">
+                <li><strong>Head impulse:</strong> Ask the patient to fixate on your nose. Turn the head quickly and unpredictably about 10 to 20 degrees to each side. A corrective catch-up saccade suggests a peripheral vestibular deficit; a normal head impulse in true AVS is concerning for stroke.</li>
+                <li><strong>Nystagmus:</strong> Observe gaze in primary position, left gaze, and right gaze. Unidirectional horizontal nystagmus fits a peripheral pattern; direction-changing, vertical, or torsional-dominant nystagmus is central until proven otherwise.</li>
+                <li><strong>Test of skew:</strong> Perform alternate cover testing while the patient fixes on a target. A vertical refixation movement when uncovering either eye suggests skew deviation and is concerning for a central lesion.</li>
+                <li><strong>Plus hearing:</strong> Check for new unilateral hearing loss using finger rub, whispered voice, tuning fork, or audiometry when available. New hearing loss with AVS can be vascular.</li>
+                <li><strong>Gait/truncal stability:</strong> Assess ability to sit, stand, or walk safely. Severe truncal ataxia or inability to sit/stand unaided is a central warning sign.</li>
+              </ol>
+              <div class="exam-checks">
+                <div><strong>Peripheral pattern</strong>Abnormal head impulse, unidirectional horizontal nystagmus, no skew, no new unilateral hearing loss.</div>
+                <div><strong>Central pattern</strong>Normal head impulse, direction-changing/vertical nystagmus, skew, new hearing loss, focal signs, or severe ataxia.</div>
+              </div>
+              <div class="table-wrap">
+                <table class="exam-table">
+                  <thead>
+                    <tr><th>HINTS plus component</th><th>Peripheral / lower-risk AVS pattern</th><th>Central / abnormal warning pattern</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><strong>Head impulse</strong></td><td>Abnormal toward the affected side, with corrective catch-up saccade.</td><td>Normal head impulse in true AVS is concerning for stroke.</td></tr>
+                    <tr><td><strong>Nystagmus</strong></td><td>Unidirectional horizontal or horizontal-torsional nystagmus.</td><td>Direction-changing gaze-evoked, vertical, or pure torsional nystagmus.</td></tr>
+                    <tr><td><strong>Test of skew</strong></td><td>No vertical refixation on alternate cover test.</td><td>Skew deviation present: vertical refixation movement when either eye is uncovered.</td></tr>
+                    <tr><td><strong>Plus hearing</strong></td><td>No new unilateral hearing loss.</td><td>New unilateral hearing loss with AVS can indicate AICA/posterior circulation ischemia.</td></tr>
+                    <tr><td><strong>Truncal/gait stability</strong></td><td>Can sit and stand with expected imbalance for peripheral vestibulopathy.</td><td>Cannot sit or stand unaided, severe truncal ataxia, focal neurologic signs.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="exam-note"><strong>Key safety point:</strong> HINTS plus depends on correct patient selection and examiner skill. If the exam is uncertain, incomplete, or the patient has central features, treat as urgent until evaluated properly.</div>
+            </article>
+          </div>
+        </div>
+
+        <div class="note-pane" id="tab-sources" role="tabpanel">
+          <ol class="sources">
+            <li>Newman-Toker DE, Edlow JA. TiTrATE: A Novel Approach to Diagnosing Acute Dizziness and Vertigo. <a href="https://pubmed.ncbi.nlm.nih.gov/26231273/" target="_blank" rel="noreferrer">Neurol Clin. 2015</a>.</li>
+            <li>Saber Tehrani AS, Kattah JC, et al. Diagnosing Stroke in Acute Dizziness and Vertigo: Pitfalls and Pearls. <a href="https://pubmed.ncbi.nlm.nih.gov/28964837/" target="_blank" rel="noreferrer">Stroke. 2018</a>.</li>
+            <li>Kattah JC, Talkad AV, Wang DZ, Hsieh YH, Newman-Toker DE. HINTS to diagnose stroke in acute vestibular syndrome. <a href="https://pubmed.ncbi.nlm.nih.gov/19762709/" target="_blank" rel="noreferrer">Stroke. 2009</a>.</li>
+          </ol>
+        </div>
+        </div>
+
+        <div class="resource-card">
+        <section class="discussion" id="discussion" aria-label="Definitions and discussion">
+          <details open>
+            <summary>Why TiTrATE starts with timing</summary>
+            <p>Traditional symptom labels like vertigo, lightheadedness, or disequilibrium are less reliable than the syndrome pattern. TiTrATE first asks whether symptoms are episodic or continuous.</p>
+          </details>
+          <details>
+            <summary>Why triggers matter</summary>
+            <p>Brief dizziness that starts only after a positional change points to triggered episodic syndromes. Continuous dizziness worsened by motion is not the same thing.</p>
+          </details>
+          <details>
+            <summary>When the result is urgent</summary>
+            <p>Central eye findings, focal neurologic signs, severe truncal ataxia, or an acute vestibular syndrome with a central HINTS pattern should prompt emergency stroke evaluation.</p>
+          </details>
+        </section>
+        </div>
+      </div>
+
+      <div class="bottom-section" aria-label="TiTrATE syndrome matrix">
+        <h2>Four TiTrATE Syndrome Buckets</h2>
+        <div class="matrix" id="matrix"></div>
+      </div>
+
+      <div class="reference-band" aria-label="References">
+        <h2>References</h2>
+        <ol class="sources">
+          <li>Newman-Toker DE, Edlow JA. TiTrATE: A Novel Approach to Diagnosing Acute Dizziness and Vertigo. <a href="https://pubmed.ncbi.nlm.nih.gov/26231273/" target="_blank" rel="noreferrer">Neurol Clin. 2015</a>.</li>
+          <li>Saber Tehrani AS, Kattah JC, et al. Diagnosing Stroke in Acute Dizziness and Vertigo: Pitfalls and Pearls. <a href="https://pubmed.ncbi.nlm.nih.gov/28964837/" target="_blank" rel="noreferrer">Stroke. 2018</a>.</li>
+          <li>Kattah JC, Talkad AV, Wang DZ, Hsieh YH, Newman-Toker DE. HINTS to diagnose stroke in acute vestibular syndrome. <a href="https://pubmed.ncbi.nlm.nih.gov/19762709/" target="_blank" rel="noreferrer">Stroke. 2009</a>.</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      Adapted and developed by <strong>MELCRUZMD</strong>, 2026.
+      <a href="mailto:melcruzmd@gmail.com">melcruzmd@gmail.com</a>
+    </footer>
+  </div>
+
+  <script>
+    const state = {
+      step: "timing",
+      timing: null,
+      trigger: null,
+      examResult: null,
+      finding: null
+    };
+
+    const syndromeMap = {
+      tev: {
+        title: "Triggered Episodic Vestibular Syndrome",
+        short: "Brief attacks started by position, head movement, or standing.",
+        logic: "Episodic + triggered",
+        exam: "Dix-Hallpike, supine roll, orthostatic vitals."
+      },
+      sev: {
+        title: "Spontaneous Episodic Vestibular Syndrome",
+        short: "Attacks begin without a required trigger; motion may worsen them.",
+        logic: "Episodic + spontaneous",
+        exam: "History pattern, auditory symptoms, migraine features, vascular risk."
+      },
+      tavs: {
+        title: "Post-Exposure Acute Vestibular Syndrome",
+        short: "Continuous dizziness after a relevant exposure, medication, toxin, or trauma.",
+        logic: "Continuous + exposure-linked",
+        exam: "Exposure review, medication/toxin assessment, trauma/otologic evaluation."
+      },
+      savs: {
+        title: "Spontaneous Acute Vestibular Syndrome",
+        short: "Continuous dizziness or vertigo for hours to days without a clear exposure.",
+        logic: "Continuous + spontaneous",
+        exam: "HINTS/HINTS plus when AVS with ongoing nystagmus is present."
+      }
+    };
+
+    const findings = {
+      tev: [
+        {
+          id: "pc-bppv",
+          label: "Dix-Hallpike shows classic posterior canal BPPV",
+          detail: "Brief latency, transient upbeat-torsional nystagmus, fatigues or resolves in under a minute.",
+          severity: "routine",
+          impression: "Pattern favors posterior canal benign paroxysmal positional vertigo.",
+          explanation: "In TiTrATE, this is the prototypical triggered episodic vestibular syndrome: brief position-triggered attacks with a matching positional test.",
+          actions: [
+            "Treat with a canalith repositioning maneuver such as Epley when clinically appropriate.",
+            "Avoid treating this as acute vestibular syndrome; HINTS is not the right test for isolated brief positional attacks.",
+            "Reassess if nystagmus is persistent, vertical/downbeat, non-fatiguing, or neurologic signs appear."
+          ],
+          teaching: [
+            "The trigger starts the attack from baseline.",
+            "A positive positional test should reproduce the patient's typical spell.",
+            "Atypical positional nystagmus moves the case away from simple BPPV."
+          ]
+        },
+        {
+          id: "hc-bppv",
+          label: "Supine roll shows horizontal canal positional pattern",
+          detail: "Horizontal nystagmus is provoked by head turns while supine and fits geotropic or apogeotropic canal patterns.",
+          severity: "routine",
+          impression: "Pattern favors horizontal canal BPPV.",
+          explanation: "TiTrATE routes position-triggered episodic dizziness to positional testing. The supine roll targets horizontal canal disease.",
+          actions: [
+            "Use a horizontal canal repositioning maneuver or refer for vestibular therapy.",
+            "Document side and nystagmus direction because treatment depends on canal variant.",
+            "Escalate if findings are atypical or the story no longer fits triggered episodic dizziness."
+          ],
+          teaching: [
+            "Dix-Hallpike is not the only positional test.",
+            "The chosen test follows the suspected canal and the patient's trigger.",
+            "The episode should be brief rather than continuous for days."
+          ]
+        },
+        {
+          id: "orthostatic",
+          label: "Standing reliably triggers lightheadedness or presyncope",
+          detail: "Symptoms occur on standing, improve when supine, or orthostatic blood pressure/pulse changes are present.",
+          severity: "caution",
+          impression: "Pattern favors orthostatic or systemic perfusion-related dizziness.",
+          explanation: "Standing-triggered episodic dizziness remains a triggered episodic syndrome, but the targeted test is orthostatic assessment rather than positional nystagmus testing.",
+          actions: [
+            "Check orthostatic vital signs and review hydration, blood loss, autonomic disease, and medications.",
+            "Consider cardiac rhythm evaluation when palpitations, syncope, chest pain, or exertional episodes are present.",
+            "Use vestibular maneuvers only when the trigger is head position rather than upright posture."
+          ],
+          teaching: [
+            "Standing is a physiologic trigger, not a vestibular positional trigger.",
+            "The target exam changes with the trigger.",
+            "Presyncope language often points outside the inner ear."
+          ]
+        },
+        {
+          id: "central-positional",
+          label: "Positional test is atypical or neurologic signs are present",
+          detail: "Downbeat or direction-changing vertical nystagmus, persistent nystagmus, severe imbalance, headache, or focal neurologic symptoms.",
+          severity: "urgent",
+          impression: "Central positional vertigo or posterior fossa process must be considered.",
+          explanation: "TiTrATE allows triggered episodic dizziness to be benign, but targeted examination can reveal central patterns that override a simple BPPV impression.",
+          actions: [
+            "Arrange urgent neurologic or emergency evaluation.",
+            "Do not rely on repeated repositioning maneuvers when findings are central or atypical.",
+            "Consider posterior fossa imaging and specialist evaluation according to clinical setting."
+          ],
+          teaching: [
+            "Triggered does not always mean benign.",
+            "Nystagmus direction and persistence matter.",
+            "The bedside pattern, not the word vertigo, drives the next step."
+          ]
+        },
+        {
+          id: "tev-referral",
+          label: "Dix-Hallpike and orthostatic vitals are both negative",
+          detail: "No typical positional nystagmus and no orthostatic blood pressure/pulse pattern is found.",
+          severity: "caution",
+          impression: "Triggered episodic dizziness remains unexplained after first-line targeted tests.",
+          explanation: "In the TiTrATE triggered episodic branch, negative Dix-Hallpike and negative orthostatic vitals should prompt reconsideration of the history and referral or focused workup rather than forcing a BPPV diagnosis.",
+          actions: [
+            "Recheck whether the event is truly triggered from baseline or actually spontaneous.",
+            "Consider supine roll testing when horizontal canal BPPV is suspected.",
+            "Arrange neuro-otology, vestibular therapy, or clinician-directed follow-up when symptoms persist or remain atypical."
+          ],
+          teaching: [
+            "A negative Dix-Hallpike does not end the algorithm.",
+            "Orthostatic vitals are the next targeted test when standing is part of the trigger.",
+            "If both are negative, the safest move is to reclassify or refer rather than inventing certainty."
+          ]
+        }
+      ],
+      sev: [
+        {
+          id: "vestibular-migraine",
+          label: "Recurrent spontaneous attacks with migraine features",
+          detail: "Episodes may last minutes to hours and cluster with migraine headache, photophobia, phonophobia, aura, or motion sensitivity.",
+          severity: "routine",
+          impression: "Pattern favors vestibular migraine.",
+          explanation: "For spontaneous episodic vestibular syndrome, TiTrATE emphasizes historical pattern because the patient may be normal between attacks.",
+          actions: [
+            "Correlate episodes with migraine criteria and triggers.",
+            "Assess disability, attack frequency, and need for migraine-directed treatment.",
+            "Reconsider vascular causes when attacks are abrupt, new, focal, or high-risk."
+          ],
+          teaching: [
+            "Spontaneous means no required trigger starts the attack.",
+            "Movement can worsen migraine dizziness without being the trigger.",
+            "Between-episode examination can be normal."
+          ]
+        },
+        {
+          id: "meniere",
+          label: "Spells include unilateral auditory symptoms",
+          detail: "Fluctuating hearing loss, tinnitus, or aural fullness accompanies spontaneous episodes lasting roughly tens of minutes to hours.",
+          severity: "routine",
+          impression: "Pattern favors Meniere disease or another audiovestibular disorder.",
+          explanation: "Auditory symptoms help separate inner-ear spontaneous episodic syndromes from migraine and vascular causes.",
+          actions: [
+            "Obtain audiometry and otologic follow-up when available.",
+            "Ask whether hearing symptoms are unilateral and fluctuate with attacks.",
+            "Escalate for sudden sustained hearing loss or central neurologic features."
+          ],
+          teaching: [
+            "Hearing symptoms are part of the targeted history.",
+            "The algorithm keeps this in spontaneous episodic disease unless attacks are positional or continuous.",
+            "Hearing loss in acute vestibular syndrome changes the risk discussion."
+          ]
+        },
+        {
+          id: "tia",
+          label: "Abrupt attacks with focal neurologic symptoms or vascular risk",
+          detail: "Transient diplopia, dysarthria, weakness, numbness, severe ataxia, new headache, or high vascular risk accompanies spontaneous episodes.",
+          severity: "urgent",
+          impression: "Posterior circulation TIA or stroke warning syndrome must be considered.",
+          explanation: "TiTrATE treats spontaneous episodic vestibular syndrome as potentially vascular when the history contains focal, abrupt, high-risk features.",
+          actions: [
+            "Arrange urgent stroke-focused evaluation.",
+            "Do not dismiss isolated dizziness in a high-risk vascular pattern.",
+            "Review timing of attacks and whether symptoms fully resolve between episodes."
+          ],
+          teaching: [
+            "Brief spells can still be dangerous.",
+            "Focal symptoms and abrupt onset carry more weight than symptom quality.",
+            "A normal exam between attacks does not exclude TIA."
+          ]
+        },
+        {
+          id: "systemic-episodic",
+          label: "Palpitations, panic physiology, or presyncopal spells dominate",
+          detail: "Episodes include palpitations, hyperventilation, chest symptoms, faintness, or situational autonomic symptoms rather than vestibular signs.",
+          severity: "caution",
+          impression: "Pattern suggests a non-vestibular episodic cause such as arrhythmia, panic physiology, or systemic illness.",
+          explanation: "TiTrATE keeps the syndrome classification, then uses targeted history to decide whether the cause is neurologic, otologic, cardiac, or systemic.",
+          actions: [
+            "Check vital signs and consider ECG or medical evaluation when cardiac symptoms are present.",
+            "Assess anxiety/panic context without prematurely attributing new neurologic symptoms to anxiety.",
+            "Reclassify if attacks are actually triggered by standing or position."
+          ],
+          teaching: [
+            "TiTrATE is not an inner-ear-only framework.",
+            "The same timing bucket can contain neurologic, otologic, and systemic diagnoses.",
+            "Triggers should be tested carefully before calling an attack spontaneous."
+          ]
+        }
+      ],
+      tavs: [
+        {
+          id: "med-toxic",
+          label: "A medication, toxin, alcohol, or metabolic exposure is plausible",
+          detail: "Continuous dizziness begins after a new dose, overdose, intoxication, withdrawal, or toxic/metabolic state.",
+          severity: "caution",
+          impression: "Pattern favors post-exposure acute vestibular syndrome from toxic, medication, or metabolic causes.",
+          explanation: "TiTrATE separates exposure-linked continuous dizziness from spontaneous acute vestibular syndrome because the targeted evaluation is exposure-centered.",
+          actions: [
+            "Review medication timing, toxic exposures, alcohol/substances, renal/hepatic risk, and metabolic abnormalities.",
+            "Remove or treat the exposure when clinically appropriate.",
+            "If no exposure explains the syndrome, reclassify as spontaneous acute vestibular syndrome and examine accordingly."
+          ],
+          teaching: [
+            "The exposure should plausibly precede the continuous syndrome.",
+            "Post-exposure AVS is not diagnosed by symptom quality alone.",
+            "A central pattern still needs urgent evaluation."
+          ]
+        },
+        {
+          id: "trauma",
+          label: "Head, neck, ear trauma, or pressure event preceded onset",
+          detail: "Symptoms follow trauma, barotrauma, diving/flying pressure change, blast exposure, or neck injury.",
+          severity: "caution",
+          impression: "Pattern favors post-traumatic or pressure-related acute vestibular syndrome.",
+          explanation: "The trigger is not a brief positional spell; it is an exposure that starts a continuous syndrome.",
+          actions: [
+            "Evaluate for head injury, cervical vascular injury, temporal bone injury, perilymphatic fistula, or concussion context as clinically indicated.",
+            "Seek urgent care for neurologic deficits, severe headache, neck pain, or high-energy trauma.",
+            "Avoid applying BPPV logic unless symptoms are brief and position-triggered after the acute phase."
+          ],
+          teaching: [
+            "A one-time exposure can launch continuous dizziness.",
+            "Do not confuse exposure-linked onset with moment-to-moment positional triggering.",
+            "Trauma broadens the targeted exam beyond vestibular maneuvers."
+          ]
+        },
+        {
+          id: "infectious",
+          label: "Systemic or otologic illness tightly precedes continuous dizziness",
+          detail: "Fever, otitis symptoms, recent viral illness, or labyrinthine symptoms are temporally linked to sustained dizziness.",
+          severity: "caution",
+          impression: "Pattern suggests post-infectious or otologic acute vestibular syndrome, while central causes remain in the differential.",
+          explanation: "TiTrATE uses exposure and context to guide the targeted exam, then asks whether the bedside pattern is peripheral or central.",
+          actions: [
+            "Assess ear findings, hearing, systemic illness, and dehydration.",
+            "Escalate for meningitis signs, focal neurologic findings, severe ataxia, or central eye findings.",
+            "Reclassify as spontaneous AVS if the exposure link is weak."
+          ],
+          teaching: [
+            "Context helps but does not replace the exam.",
+            "Post-infectious does not automatically mean benign.",
+            "New hearing loss changes the evaluation."
+          ]
+        },
+        {
+          id: "no-exposure",
+          label: "No convincing exposure explains continuous symptoms",
+          detail: "The patient is continuously dizzy for hours to days, and medications, toxins, trauma, and infection do not explain onset.",
+          severity: "urgent",
+          impression: "Reclassify as spontaneous acute vestibular syndrome.",
+          explanation: "TiTrATE depends on the best-fitting syndrome. Without a real exposure, continuous recent-onset dizziness belongs in the spontaneous AVS pathway.",
+          actions: [
+            "Move to the spontaneous acute vestibular syndrome branch.",
+            "Use HINTS-family eye examination only when AVS with spontaneous nystagmus is present and the examiner is trained.",
+            "Consider emergency evaluation if severe, new, or central features are present."
+          ],
+          teaching: [
+            "Weak exposure stories should not delay stroke assessment.",
+            "The branch can change as history improves.",
+            "Continuous symptoms deserve a different test set than episodic attacks."
+          ]
+        }
+      ],
+      savs: [
+        {
+          id: "peripheral-hints",
+          label: "Peripheral HINTS pattern in true AVS",
+          detail: "Abnormal head impulse, unidirectional horizontal nystagmus, no skew, no focal neurologic signs, and no new unilateral hearing loss.",
+          severity: "caution",
+          impression: "Pattern favors acute peripheral vestibulopathy such as vestibular neuritis.",
+          explanation: "In TiTrATE, spontaneous AVS is where HINTS-family targeted eye examination is most useful, but only in the correct clinical context.",
+          actions: [
+            "Confirm the patient has ongoing AVS with spontaneous nystagmus before applying HINTS.",
+            "Treat supportively and arrange follow-up according to local practice.",
+            "Escalate if the pattern is incomplete, the examiner is not trained, or central signs appear."
+          ],
+          teaching: [
+            "HINTS is not for episodic dizziness or patients who are no longer symptomatic.",
+            "The head impulse result is interpreted with nystagmus and skew together.",
+            "A peripheral pattern reduces but does not replace clinical judgment."
+          ]
+        },
+        {
+          id: "central-hints",
+          label: "Central HINTS pattern or severe neurologic concern",
+          detail: "Normal head impulse, direction-changing or vertical nystagmus, skew deviation, new unilateral hearing loss, focal signs, or severe truncal ataxia.",
+          severity: "urgent",
+          impression: "Pattern is concerning for posterior circulation stroke or another central cause.",
+          explanation: "TiTrATE routes spontaneous AVS to targeted eye movement and neurologic assessment because posterior fossa stroke can mimic vestibular neuritis.",
+          actions: [
+            "Treat as urgent central AVS and arrange emergency stroke evaluation.",
+            "Do not reassure based on symptom quality or early negative imaging alone when the bedside pattern is central.",
+            "Consider HINTS plus elements, including hearing, in the acute vestibular syndrome context."
+          ],
+          teaching: [
+            "Central nystagmus patterns matter more than the patient's chosen dizziness word.",
+            "New hearing loss with AVS can be a vascular warning sign.",
+            "Severe inability to sit or stand unaided is a major concern."
+          ]
+        },
+        {
+          id: "not-hints",
+          label: "No spontaneous nystagmus or syndrome does not fit AVS",
+          detail: "Symptoms are intermittent, resolved, chronic, nonspecific, or no ongoing nystagmus is present during evaluation.",
+          severity: "caution",
+          impression: "The case may be misclassified; HINTS is not applicable.",
+          explanation: "TiTrATE requires the targeted exam to match the syndrome. Applying HINTS outside AVS can mislead.",
+          actions: [
+            "Return to timing and triggers and reclassify the syndrome.",
+            "Use positional testing, orthostatic vitals, or historical pattern if those better fit the story.",
+            "Escalate for any new focal neurologic signs or high-risk acute presentation."
+          ],
+          teaching: [
+            "The right test in the wrong syndrome can be the wrong test.",
+            "HINTS requires continuous acute symptoms and spontaneous nystagmus.",
+            "TiTrATE is a sorting framework before it is a test menu."
+          ]
+        },
+        {
+          id: "uncertain-avs",
+          label: "Findings are mixed or examiner is not trained in eye signs",
+          detail: "The story fits spontaneous AVS, but the bedside eye exam is uncertain, incomplete, or not confidently performed.",
+          severity: "urgent",
+          impression: "Central AVS cannot be excluded by this app.",
+          explanation: "TiTrATE highlights targeted examination, but the accuracy of HINTS depends on correct patient selection and examiner skill.",
+          actions: [
+            "Seek urgent clinician or specialist evaluation for a new spontaneous AVS presentation.",
+            "Do not downgrade concern because a single component is unclear.",
+            "Use local emergency/stroke pathways when presentation is severe or high-risk."
+          ],
+          teaching: [
+            "Uncertainty is a result, not a failure.",
+            "A new AVS presentation carries enough risk to justify escalation when the exam is not reliable.",
+            "The algorithm should make uncertainty visible."
+          ]
+        }
+      ]
+    };
+
+    const progressSteps = [
+      { id: "timing", title: "Timing", text: "Episodic versus continuous" },
+      { id: "trigger", title: "Triggers", text: "Triggered, exposure-linked, or spontaneous" },
+      { id: "exam", title: "Targeted History/Exam", text: "Use syndrome-specific clues" },
+      { id: "treatment", title: "Tests/Treatment", text: "Recommended next step" }
+    ];
+
+    const icons = {
+      episodic: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 13c2.5-6 5.5-6 8 0s5.5 6 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h1M19 7h1M12 4v2M12 18v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      continuous: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 7h10M7 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".55"/></svg>',
+      trigger: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3v5M12 16v5M3 12h5M16 12h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>',
+      spontaneous: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M7 17c-3-4-1.6-9 2.5-11 4.6-2.3 9.5.9 9.5 6 0 5-4.8 8.2-9.3 6.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 17h4v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      exposure: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v5l-5 8a4 4 0 0 0 3.4 6h7.2A4 4 0 0 0 19 16l-5-8V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 15h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      exam: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>'
+    };
+
+    const stageTitle = document.getElementById("stageTitle");
+    const stageSubtitle = document.getElementById("stageSubtitle");
+    const choiceArea = document.getElementById("choiceArea");
+    const resultArea = document.getElementById("resultArea");
+    const pathLabel = document.getElementById("pathLabel");
+    const algorithmStrip = document.getElementById("algorithmStrip");
+    const progressList = document.getElementById("progressList");
+    const matrix = document.getElementById("matrix");
+    const algorithmView = document.getElementById("algorithmView");
+    const learnView = document.getElementById("learnView");
+
+    function syndromeId() {
+      if (state.timing === "episodic" && state.trigger === "triggered") return "tev";
+      if (state.timing === "episodic" && state.trigger === "spontaneous") return "sev";
+      if (state.timing === "continuous" && state.trigger === "exposure") return "tavs";
+      if (state.timing === "continuous" && state.trigger === "spontaneous") return "savs";
+      return null;
+    }
+
+    function currentStepIndex() {
+      if (state.finding) return 3;
+      if (state.trigger) return 2;
+      if (state.timing) return 1;
+      return 0;
+    }
+
+    function renderProgress() {
+      const index = currentStepIndex();
+      progressList.innerHTML = progressSteps.map((step, i) => {
+        const status = i < index ? "done" : i === index ? "active" : "";
+        const clickable = i <= index;
+        const dot = i < index ? "✓" : i + 1;
+        return `<li>
+          <button class="progress-item ${status} ${clickable ? "clickable" : "locked"}" type="button" data-step="${i}" ${clickable ? "" : "disabled"}>
+            <div class="step-dot">${dot}</div>
+            <div><strong>${step.title}</strong><span>${step.text}</span></div>
+          </button>
+        </li>`;
+      }).join("");
+      progressList.querySelectorAll("[data-step]").forEach(button => {
+        button.addEventListener("click", () => goToStep(Number(button.dataset.step)));
+      });
+    }
+
+    function flowNode({ title, text, chip, action, selected, active, inactive, final, treatment }) {
+      const tag = action ? "button" : "div";
+      const actionAttr = action ? ` type="button" data-flow-action="${action}"` : "";
+      return `<${tag}${actionAttr} class="flow-node ${selected ? "selected" : ""} ${active ? "active" : ""} ${inactive ? "inactive" : ""} ${final ? "final" : ""} ${treatment ? "treatment" : ""}">
+        <span class="flow-chip">${chip}</span>
+        <strong>${title}</strong>
+        <span>${text}</span>
+      </${tag}>`;
+    }
+
+    function currentPhaseIndex() {
+      if (state.finding) return 3;
+      if (state.trigger) return 2;
+      if (state.timing) return 1;
+      return 0;
+    }
+
+    function renderPhaseStrip() {
+      const active = currentPhaseIndex();
+      return `<div class="phase-strip" aria-label="Current TiTrATE phase">
+        ${progressSteps.map((step, index) => `
+          <div class="phase-pill ${index < active ? "done" : ""} ${index === active ? "active" : ""}">
+            ${step.title}
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function allFindings() {
+      return Object.values(findings).flat();
+    }
+
+    function selectedFinding() {
+      return allFindings().find(item => item.id === state.finding);
+    }
+
+    function treatmentForFinding(item) {
+      if (!item) return null;
+      const map = {
+        "pc-bppv": ["Canalith repositioning for BPPV", "Treat with Epley or an appropriate canalith repositioning maneuver."],
+        "hc-bppv": ["Horizontal canal repositioning", "Use a horizontal canal maneuver or refer for vestibular therapy."],
+        orthostatic: ["Medical workup for orthostatic hypotension", "Check orthostatic vitals, hydration, blood loss, autonomic disease, and medications."],
+        "central-positional": ["MRI brain / urgent central workup", "Evaluate for posterior fossa lesion or other central positional vertigo cause."],
+        "tev-referral": ["Neuro-otology referral / reclassification", "Recheck the syndrome classification and refer or pursue focused workup when symptoms persist."],
+        "vestibular-migraine": ["Migraine-directed follow-up", "Correlate with migraine criteria and consider migraine-directed treatment."],
+        meniere: ["Audiometry and otology follow-up", "Obtain audiometry and assess fluctuating unilateral auditory symptoms."],
+        tia: ["Urgent TIA/stroke workup", "Arrange stroke-focused evaluation for abrupt, focal, or high-risk episodes."],
+        "systemic-episodic": ["Medical/cardiac evaluation", "Check vital signs and consider ECG or systemic evaluation when cardiac symptoms are present."],
+        "med-toxic": ["Toxic/metabolic workup or treatment", "Review exposure, medications, substances, and metabolic abnormalities."],
+        trauma: ["Trauma/vascular/otologic evaluation", "Evaluate head, neck, temporal bone, and cervical vascular injury risk."],
+        infectious: ["Infectious/otologic evaluation", "Assess ear findings, hearing, systemic illness, and central warning signs."],
+        "no-exposure": ["Move to spontaneous AVS pathway", "Use the spontaneous acute vestibular syndrome branch when no exposure explains onset."],
+        "peripheral-hints": ["Vestibular neuritis support and follow-up", "Treat supportively and arrange follow-up when the peripheral AVS pattern is reliable."],
+        "central-hints": ["Emergency stroke/central workup", "Treat as central AVS and arrange emergency stroke evaluation."],
+        "not-hints": ["Reclassify; HINTS not applicable", "Return to timing and triggers; choose the exam that matches the syndrome."],
+        "uncertain-avs": ["Urgent evaluation for uncertain AVS", "Escalate when HINTS plus is uncertain, incomplete, or not reliably performed."]
+      };
+      const fallback = [item.impression, item.actions?.[0] || "Use clinician-directed tests and treatment."];
+      return map[item.id] || fallback;
+    }
+
+    function renderTreatmentNode(item) {
+      const treatment = treatmentForFinding(item);
+      if (!treatment) return "";
+      return `<div class="flow-connector"><span></span><span></span></div>
+        <div class="flow-row one">
+          ${flowNode({
+            title: treatment[0],
+            text: treatment[1],
+            chip: "tests / treatment",
+            selected: true,
+            final: true,
+            treatment: true
+          })}
+        </div>`;
+    }
+
+    function bindFlowActions() {
+      algorithmStrip.querySelectorAll("[data-flow-action]").forEach(node => {
+        node.addEventListener("click", () => {
+          const [type, value] = node.dataset.flowAction.split(":");
+          if (type === "timing") {
+            state.timing = value;
+            state.trigger = null;
+            state.examResult = null;
+            state.finding = null;
+          }
+          if (type === "trigger") {
+            state.trigger = value;
+            state.examResult = null;
+            state.finding = null;
+          }
+          if (type === "exam") {
+            state.examResult = value;
+            state.finding = null;
+          }
+          if (type === "finding") {
+            state.finding = value;
+          }
+          render();
+        });
+      });
+    }
+
+    function renderAlgorithmStrip(activeId) {
+      const selectedSyndrome = activeId;
+      const triggerOptions = state.timing === "episodic" ? [
+        { id: "triggered", title: "Triggered", text: "A specific movement, position, or standing starts the attack.", chip: "branch" },
+        { id: "spontaneous", title: "Spontaneous", text: "The attack starts without an obligate trigger.", chip: "branch" }
+      ] : [
+        { id: "exposure", title: "Post-exposure", text: "Onset follows a plausible medication, toxin, trauma, infection, or pressure event.", chip: "branch" },
+        { id: "spontaneous", title: "Spontaneous acute", text: "Continuous symptoms begin without a convincing exposure.", chip: "branch" }
+      ];
+      function targetedNodes() {
+        if (!selectedSyndrome) return "";
+
+        if (selectedSyndrome === "tev") {
+          if (!state.examResult && !state.finding) {
+            return `<div class="flow-connector"><span></span><span></span></div>
+              <div class="flow-row three">
+                ${flowNode({
+                  title: "Dix-Hallpike positive: typical nystagmus",
+                  text: "Brief latency, transient upbeat-torsional nystagmus that reproduces the spell.",
+                  chip: "test result",
+                  action: "finding:pc-bppv",
+                  active: true,
+                  final: true
+                })}
+                ${flowNode({
+                  title: "Dix-Hallpike positive: atypical nystagmus",
+                  text: "Persistent, downbeat, vertical, direction-changing, or non-fatiguing pattern.",
+                  chip: "test result",
+                  action: "finding:central-positional",
+                  active: true,
+                  final: true
+                })}
+                ${flowNode({
+                  title: "Dix-Hallpike negative",
+                  text: "No typical posterior canal BPPV pattern. Next, check orthostatic vital signs.",
+                  chip: "next test",
+                  action: "exam:dh-negative",
+                  active: true,
+                  final: true
+                })}
+              </div>`;
+          }
+
+          if (state.examResult === "dh-negative" && !state.finding) {
+            return `<div class="flow-connector"><span></span><span></span></div>
+              <div class="flow-row three">
+                ${flowNode({
+                  title: "Orthostatic vital signs positive",
+                  text: "Symptoms reproduced with abnormal BP drop or heart-rate response on standing.",
+                  chip: "test result",
+                  action: "finding:orthostatic",
+                  active: true,
+                  final: true
+                })}
+                ${flowNode({
+                  title: "Supine roll positive",
+                  text: "Horizontal canal positional nystagmus is found when rolling the head supine.",
+                  chip: "optional test",
+                  action: "finding:hc-bppv",
+                  active: true,
+                  final: true
+                })}
+                ${flowNode({
+                  title: "Orthostatic vital signs negative",
+                  text: "No BPPV pattern and no orthostatic pattern. Reclassify or refer.",
+                  chip: "next step",
+                  action: "finding:tev-referral",
+                  active: true,
+                  final: true
+                })}
+              </div>`;
+          }
+
+          const selectedItem = findings.tev.find(item => item.id === state.finding);
+          if (!selectedItem) return "";
+          return `<div class="flow-connector"><span></span><span></span></div>
+            <div class="flow-row one">
+              ${flowNode({
+                title: selectedItem.label,
+                text: selectedItem.detail,
+                chip: selectedItem.severity,
+                selected: true,
+                final: true
+              })}
+            </div>
+            ${renderTreatmentNode(selectedItem)}`;
+        }
+
+        const nodes = findings[selectedSyndrome].map(item => flowNode({
+          title: item.label,
+          text: item.detail,
+          chip: item.severity,
+          action: `finding:${item.id}`,
+          selected: state.finding === item.id,
+          active: !state.finding,
+          inactive: state.finding && state.finding !== item.id,
+          final: true
+        })).join("");
+        const item = selectedFinding();
+
+        return `<div class="flow-connector"><span></span><span></span></div>
+          <div class="flow-row four">${nodes}</div>
+          ${state.finding ? renderTreatmentNode(item) : ""}`;
+      }
+
+      algorithmStrip.innerHTML = `<div class="flowchart" aria-label="Interactive TiTrATE flowchart">
+        ${renderPhaseStrip()}
+        <div class="flow-row one">
+          ${flowNode({
+            title: "Recent-onset dizziness",
+            text: "Start with syndrome pattern: timing, then triggers, then targeted examination.",
+            chip: "start",
+            selected: true
+          })}
+        </div>
+        <div class="flow-connector"><span></span><span></span></div>
+        <div class="flow-row two">
+          ${flowNode({
+            title: "Episodic",
+            text: "Distinct spells with baseline or near-baseline periods between attacks.",
+            chip: "timing",
+            action: "timing:episodic",
+            selected: state.timing === "episodic",
+            active: !state.timing,
+            inactive: state.timing && state.timing !== "episodic"
+          })}
+          ${flowNode({
+            title: "Continuous",
+            text: "New dizziness or vertigo persists for hours to days.",
+            chip: "timing",
+            action: "timing:continuous",
+            selected: state.timing === "continuous",
+            active: !state.timing,
+            inactive: state.timing && state.timing !== "continuous"
+          })}
+        </div>
+        ${state.timing ? `
+          <div class="flow-connector"><span></span><span></span></div>
+          <div class="flow-row two">
+            ${triggerOptions.map(option => flowNode({
+              title: option.title,
+              text: option.text,
+              chip: option.chip,
+              action: `trigger:${option.id}`,
+              selected: state.trigger === option.id,
+              active: !state.trigger,
+              inactive: state.trigger && state.trigger !== option.id
+            })).join("")}
+          </div>` : ""}
+        ${selectedSyndrome ? `
+          <div class="flow-connector"><span></span><span></span></div>
+          <div class="flow-row four">
+            ${Object.entries(syndromeMap).map(([id, item]) => flowNode({
+              title: item.title,
+              text: item.logic,
+              chip: "syndrome",
+              selected: selectedSyndrome === id,
+              inactive: selectedSyndrome !== id,
+              final: true
+            })).join("")}
+          </div>
+          ${targetedNodes()}` : ""}
+        <p class="flow-hint">Click any available box to move forward or revise the branch.</p>
+      </div>`;
+      bindFlowActions();
+    }
+
+    function renderMatrix() {
+      matrix.innerHTML = Object.values(syndromeMap).map(item => `
+        <article class="matrix-card">
+          <h3>${item.title}</h3>
+          <p><strong>Pattern:</strong> ${item.short}</p>
+          <p><strong>Target:</strong> ${item.exam}</p>
+        </article>
+      `).join("");
+    }
+
+    function setPathLabel() {
+      const id = syndromeId();
+      let label = "New case";
+      if (state.timing && !state.trigger) label = state.timing === "episodic" ? "Episodic pathway" : "Continuous pathway";
+      if (id) label = syndromeMap[id].title;
+      pathLabel.innerHTML = `${icons.exam}<span>${label}</span>`;
+    }
+
+    function cardButton({ id, title, kicker, text, icon, footer }, onClick, selected) {
+      return `<button type="button" class="choice-card ${selected ? "selected" : ""}" data-choice="${id}">
+        <div class="choice-top">
+          <div>
+            <div class="choice-kicker">${kicker}</div>
+          </div>
+          <div class="choice-icon" aria-hidden="true">${icon}</div>
+        </div>
+        <h3>${title}</h3>
+        <p>${text}</p>
+        <div class="choice-footer"><span>${footer}</span><span class="arrow" aria-hidden="true">›</span></div>
+      </button>`;
+    }
+
+    function bindChoice(handler) {
+      choiceArea.querySelectorAll("[data-choice]").forEach(button => {
+        button.addEventListener("click", () => handler(button.dataset.choice));
+      });
+    }
+
+    function renderTiming() {
+      state.step = "timing";
+      stageTitle.textContent = "First, choose the timing pattern.";
+      stageSubtitle.textContent = "TiTrATE starts by sorting recent-onset dizziness into episodic attacks or continuous symptoms. Do not start with the word vertigo, lightheadedness, or imbalance.";
+      resultArea.innerHTML = "";
+      choiceArea.innerHTML = "";
+    }
+
+    function renderTrigger() {
+      state.step = "trigger";
+      resultArea.innerHTML = "";
+      const episodic = state.timing === "episodic";
+      stageTitle.textContent = episodic ? "Now decide if attacks are triggered." : "Now decide if onset followed an exposure.";
+      stageSubtitle.textContent = episodic
+        ? "A true trigger starts an episode from baseline. Head movement that only worsens already-continuous dizziness is not a trigger in TiTrATE."
+        : "For continuous dizziness, TiTrATE distinguishes a post-exposure acute syndrome from a spontaneous acute vestibular syndrome.";
+      choiceArea.innerHTML = "";
+    }
+
+    function renderExam() {
+      state.step = "exam";
+      const id = syndromeId();
+      const syndrome = syndromeMap[id];
+      if (id === "tev" && !state.examResult && !state.finding) {
+        stageTitle.textContent = "Perform Dix-Hallpike first.";
+        stageSubtitle.textContent = "Triggered episodic dizziness first asks whether positional testing shows typical BPPV, atypical central-pattern nystagmus, or no posterior canal pattern. If Dix-Hallpike is negative, the next step is orthostatic vital signs.";
+      } else if (id === "tev" && state.examResult === "dh-negative" && !state.finding) {
+        stageTitle.textContent = "Dix-Hallpike is negative. Check orthostatic signs.";
+        stageSubtitle.textContent = "Now decide whether standing reproduces symptoms with abnormal blood pressure or pulse response. If orthostatic vitals are negative, reconsider horizontal canal BPPV with supine roll testing or refer/reclassify.";
+      } else if (state.finding) {
+        const item = selectedFinding();
+        const treatment = treatmentForFinding(item);
+        stageTitle.textContent = "Review the tests / treatment step.";
+        stageSubtitle.textContent = `${item.label}: ${treatment ? `${treatment[0]} - ${treatment[1]}` : "Use the recommended next step for this TiTrATE endpoint."}`;
+      } else {
+        stageTitle.textContent = "Select the targeted finding that best fits.";
+        stageSubtitle.textContent = `${syndrome.title}: ${syndrome.short} The next step is not a generic dizziness workup; it is the test or history set TiTrATE pairs with this syndrome.`;
+      }
+      choiceArea.innerHTML = "";
+      renderResult();
+    }
+
+    function renderResult() {
+      const id = syndromeId();
+      if (!state.finding || !id) {
+        resultArea.innerHTML = "";
+        return;
+      }
+      const item = selectedFinding();
+      const treatment = treatmentForFinding(item);
+      const severityClass = item.severity === "urgent" ? "urgent" : item.severity === "caution" ? "caution" : "";
+      resultArea.innerHTML = `<section class="result-panel" aria-label="TiTrATE impression and action">
+        <div class="result-header">
+          <div>
+            <h3>${item.impression}</h3>
+            <p><strong>Tests / Treatment:</strong> ${treatment ? `${treatment[0]} - ${treatment[1]}` : item.explanation}</p>
+            <p style="margin-top:8px;">${item.explanation}</p>
+          </div>
+          <span class="severity ${severityClass}">${item.severity}</span>
+        </div>
+        <div class="result-body">
+          <div class="result-block">
+            <h4>Tests / Treatment</h4>
+            <ul class="result-list">
+              ${item.actions.map(action => `<li><span class="check">✓</span><span>${action}</span></li>`).join("")}
+            </ul>
+          </div>
+          <div class="result-block">
+            <h4>Teaching point</h4>
+            <ul class="result-list">
+              ${item.teaching.map(point => `<li><span class="check">i</span><span>${point}</span></li>`).join("")}
+            </ul>
+          </div>
+        </div>
+      </section>`;
+    }
+
+    function renderTabs() {
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          const target = tab.dataset.tab;
+          document.querySelectorAll(".tab").forEach(item => {
+            item.classList.toggle("active", item === tab);
+            item.setAttribute("aria-selected", String(item === tab));
+          });
+          document.querySelectorAll(".note-pane").forEach(pane => {
+            pane.classList.toggle("active", pane.id === `tab-${target}`);
+          });
+        });
+      });
+    }
+
+    function goToStep(stepIndex) {
+      const current = currentStepIndex();
+      if (stepIndex > current) return;
+      if (stepIndex === 0) {
+        state.timing = null;
+        state.trigger = null;
+        state.examResult = null;
+        state.finding = null;
+      }
+      if (stepIndex === 1) {
+        state.trigger = null;
+        state.examResult = null;
+        state.finding = null;
+      }
+      if (stepIndex === 2) {
+        state.examResult = null;
+        state.finding = null;
+      }
+      showView("algorithm");
+      render();
+      document.querySelector(".main-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function showView(view) {
+      const isAlgorithm = view === "algorithm";
+      algorithmView.classList.toggle("hidden", !isAlgorithm);
+      learnView.classList.toggle("hidden", isAlgorithm);
+      document.querySelectorAll(".mode-tab").forEach(tab => {
+        const active = tab.dataset.view === view;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-current", active ? "page" : "false");
+      });
+    }
+
+    function renderViewTabs() {
+      document.querySelectorAll(".mode-tab").forEach(tab => {
+        tab.addEventListener("click", () => showView(tab.dataset.view));
+      });
+      document.getElementById("learnBtn").addEventListener("click", () => {
+        showView("learn");
+        learnView.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    function render() {
+      setPathLabel();
+      renderProgress();
+      renderAlgorithmStrip(syndromeId());
+      if (!state.timing) renderTiming();
+      else if (!state.trigger) renderTrigger();
+      else renderExam();
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      state.step = "timing";
+      state.timing = null;
+      state.trigger = null;
+      state.examResult = null;
+      state.finding = null;
+      showView("algorithm");
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    renderTabs();
+    renderViewTabs();
+    renderMatrix();
+    render();
+  </script>
+</body>
+</html>
