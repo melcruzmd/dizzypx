@@ -250,6 +250,14 @@
       transform: translateY(-1px);
     }
 
+    .ghost-button:disabled,
+    .primary-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
+      box-shadow: none;
+    }
+
     .ghost-button:focus-visible,
     .primary-button:focus-visible,
     .mode-tab:focus-visible,
@@ -1897,6 +1905,12 @@
             Mobile
           </button>
         </div>
+        <button class="ghost-button" type="button" id="backBtn" title="Go back one decision" disabled>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Back
+        </button>
         <button class="ghost-button" type="button" id="resetBtn" title="Reset the navigator">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2532,6 +2546,7 @@
     const matrix = document.getElementById("matrix");
     const algorithmView = document.getElementById("algorithmView");
     const learnView = document.getElementById("learnView");
+    const backBtn = document.getElementById("backBtn");
     const layoutButtons = document.querySelectorAll("[data-layout-mode]");
 
     function syndromeId() {
@@ -2991,6 +3006,29 @@
       document.querySelector(".main-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    function canGoBack() {
+      return Boolean(state.timing || state.trigger || state.examResult || state.finding);
+    }
+
+    function updateBackButton() {
+      backBtn.disabled = !canGoBack();
+    }
+
+    function goBackOneDecision() {
+      if (state.finding) {
+        state.finding = null;
+      } else if (state.examResult) {
+        state.examResult = null;
+      } else if (state.trigger) {
+        state.trigger = null;
+      } else if (state.timing) {
+        state.timing = null;
+      }
+      showView("algorithm");
+      render();
+      document.querySelector(".main-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     function showView(view) {
       const isAlgorithm = view === "algorithm";
       algorithmView.classList.toggle("hidden", !isAlgorithm);
@@ -3039,7 +3077,10 @@
       if (!state.timing) renderTiming();
       else if (!state.trigger) renderTrigger();
       else renderExam();
+      updateBackButton();
     }
+
+    backBtn.addEventListener("click", goBackOneDecision);
 
     document.getElementById("resetBtn").addEventListener("click", () => {
       state.step = "timing";
