@@ -606,6 +606,20 @@
       letter-spacing: 0.06em;
     }
 
+    button.phase-pill {
+      cursor: pointer;
+    }
+
+    button.phase-pill:hover {
+      border-color: rgba(13, 143, 139, 0.36);
+      background: rgba(255,255,255,0.68);
+    }
+
+    .phase-pill.locked {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
     .phase-pill.active {
       color: white;
       border-color: transparent;
@@ -850,6 +864,31 @@
       border-color: rgba(40, 111, 170, 0.36);
       background: rgba(224, 241, 255, 0.84);
       box-shadow: 0 14px 30px rgba(40, 111, 170, 0.10);
+    }
+
+    .flow-node.prompt strong {
+      font-size: 1.08rem;
+      font-weight: 900;
+    }
+
+    .flow-node.prompt:not(.selected)::before {
+      content: "↓";
+      position: absolute;
+      left: 50%;
+      bottom: -18px;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: #1c527c;
+      background: rgba(224, 241, 255, 0.98);
+      border: 1px solid rgba(40, 111, 170, 0.24);
+      box-shadow: 0 8px 18px rgba(40, 111, 170, 0.16);
+      font-size: 1.05rem;
+      font-weight: 950;
+      z-index: 3;
     }
 
     .flow-node.prompt .flow-chip {
@@ -1765,6 +1804,18 @@
       min-height: 76px;
       padding-right: 66px;
       border-style: dashed;
+    }
+
+    body[data-layout="mobile"] .flow-node.prompt strong {
+      font-size: 0.92rem;
+      line-height: 1.12;
+    }
+
+    body[data-layout="mobile"] .flow-node.prompt:not(.selected)::before {
+      bottom: -14px;
+      width: 22px;
+      height: 22px;
+      font-size: 0.88rem;
     }
 
     body[data-layout="mobile"] .flow-node.treatment {
@@ -2847,11 +2898,15 @@
     function renderPhaseStrip() {
       const active = currentPhaseIndex();
       return `<div class="phase-strip" aria-label="Current TiTrATE phase">
-        ${progressSteps.map((step, index) => `
-          <div class="phase-pill ${index < active ? "done" : ""} ${index === active ? "active" : ""}">
+        ${progressSteps.map((step, index) => {
+          const clickable = index <= active;
+          const tag = clickable ? "button" : "div";
+          const attrs = clickable ? ` type="button" data-phase-step="${index}"` : "";
+          return `
+          <${tag}${attrs} class="phase-pill ${index < active ? "done" : ""} ${index === active ? "active" : ""} ${clickable ? "" : "locked"}">
             ${step.title}
-          </div>
-        `).join("")}
+          </${tag}>`;
+        }).join("")}
       </div>`;
     }
 
@@ -2997,6 +3052,9 @@
           render();
         });
       });
+      algorithmStrip.querySelectorAll("[data-phase-step]").forEach(button => {
+        button.addEventListener("click", () => goToStep(Number(button.dataset.phaseStep)));
+      });
     }
 
     function renderAlgorithmStrip(activeId) {
@@ -3125,7 +3183,6 @@
 
       algorithmStrip.innerHTML = `<div class="flowchart" aria-label="Interactive TiTrATE flowchart">
         ${renderPhaseStrip()}
-        ${renderSeverityLegend()}
         <div class="flow-row one start-row">
           ${flowNode({
             title: "Recent-onset dizziness",
@@ -3182,6 +3239,7 @@
           </div>
           ${targetedNodes()}` : ""}
         <p class="flow-hint">Yellow boxes are the next decision. Teal boxes are selected. Gray boxes are alternate branches you can revisit.</p>
+        ${renderSeverityLegend()}
       </div>`;
       bindFlowActions();
     }
