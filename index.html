@@ -764,6 +764,42 @@
       border-color: var(--line);
     }
 
+    button.flow-node.active:not(.prompt) {
+      padding-left: 42px;
+    }
+
+    button.flow-node.active:not(.prompt)::before {
+      content: "→";
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: white;
+      background: var(--teal);
+      font-size: 0.9rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    button.flow-node.prompt::after {
+      content: "Do first";
+      color: #1c527c;
+      background: rgba(224, 241, 255, 0.96);
+      border-color: rgba(40, 111, 170, 0.22);
+    }
+
+    button.flow-node.prompt.selected::after {
+      content: "Done";
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.95);
+      border-color: rgba(13, 143, 139, 0.22);
+    }
+
     .flow-node.final {
       min-height: 120px;
     }
@@ -823,26 +859,26 @@
     }
 
     .flow-node.severity-routine .flow-chip {
-      color: #175f4d;
-      background: rgba(231, 250, 239, 0.88);
-      border: 1px solid rgba(35, 133, 108, 0.18);
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.88);
+      border: 1px solid rgba(13, 143, 139, 0.16);
     }
 
     .flow-node.severity-caution .flow-chip {
-      color: #67440e;
-      background: rgba(255, 244, 215, 0.92);
-      border: 1px solid rgba(201, 130, 29, 0.22);
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.88);
+      border: 1px solid rgba(13, 143, 139, 0.16);
     }
 
     .flow-node.severity-urgent .flow-chip {
-      color: #8a2d2d;
-      background: rgba(255, 235, 235, 0.94);
-      border: 1px solid rgba(196, 78, 78, 0.22);
+      color: var(--teal-dark);
+      background: rgba(229, 250, 248, 0.88);
+      border: 1px solid rgba(13, 143, 139, 0.16);
     }
 
     .flow-node.severity-urgent.active {
-      border-color: rgba(196, 78, 78, 0.54);
-      background: rgba(255, 241, 232, 0.94);
+      border-color: rgba(201, 130, 29, 0.68);
+      background: rgba(255, 248, 226, 0.92);
     }
 
     .flow-node strong {
@@ -909,18 +945,18 @@
     }
 
     .severity-key.routine {
-      border-color: rgba(35, 133, 108, 0.28);
-      background: rgba(231, 250, 239, 0.66);
+      border-color: rgba(13, 143, 139, 0.22);
+      background: rgba(229, 250, 248, 0.58);
     }
 
     .severity-key.caution {
-      border-color: rgba(201, 130, 29, 0.30);
-      background: rgba(255, 248, 226, 0.74);
+      border-color: rgba(13, 143, 139, 0.22);
+      background: rgba(229, 250, 248, 0.58);
     }
 
     .severity-key.urgent {
-      border-color: rgba(196, 78, 78, 0.30);
-      background: rgba(255, 235, 235, 0.74);
+      border-color: rgba(13, 143, 139, 0.22);
+      background: rgba(229, 250, 248, 0.58);
     }
 
     .flow-hint {
@@ -1681,6 +1717,17 @@
       letter-spacing: 0.03em;
     }
 
+    body[data-layout="mobile"] button.flow-node.active:not(.prompt) {
+      padding-left: 34px;
+    }
+
+    body[data-layout="mobile"] button.flow-node.active:not(.prompt)::before {
+      left: 9px;
+      width: 18px;
+      height: 18px;
+      font-size: 0.78rem;
+    }
+
     body[data-layout="mobile"] .flow-node.selected:not(.treatment),
     body[data-layout="mobile"] .flow-node.inactive {
       min-height: 46px;
@@ -1716,7 +1763,7 @@
 
     body[data-layout="mobile"] .flow-node.prompt {
       min-height: 76px;
-      padding-right: 9px;
+      padding-right: 66px;
       border-style: dashed;
     }
 
@@ -2369,6 +2416,7 @@
       timing: null,
       trigger: null,
       examResult: null,
+      promptAck: null,
       finding: null
     };
 
@@ -2864,12 +2912,23 @@
         </div>`;
     }
 
-    function examPromptForSyndrome(id, phase = "initial") {
+    function promptKeyForSyndrome(id, phase = "initial") {
+      if (id === "tev" && phase === "orthostatic") return "tev-orthostatic";
+      if (id === "tev") return "tev-dh";
+      return id;
+    }
+
+    function examPromptForSyndrome(id, phase = "initial", acknowledged = false) {
+      const promptKey = promptKeyForSyndrome(id, phase);
+      const action = acknowledged ? null : `prompt:${promptKey}`;
       if (id === "tev" && phase === "dh") {
         return flowNode({
           title: "Do Dix-Hallpike now",
           text: "Before choosing an endpoint, perform Dix-Hallpike and classify the nystagmus as typical, atypical, or absent.",
           chip: "required exam",
+          action,
+          active: !acknowledged,
+          selected: acknowledged,
           prompt: true
         });
       }
@@ -2878,6 +2937,9 @@
           title: "Measure orthostatic vitals now",
           text: "After a negative Dix-Hallpike, check standing blood pressure and pulse response. Use supine roll if horizontal canal BPPV is suspected.",
           chip: "required exam",
+          action,
+          active: !acknowledged,
+          selected: acknowledged,
           prompt: true
         });
       }
@@ -2900,7 +2962,7 @@
       };
       const prompt = prompts[id];
       if (!prompt) return "";
-      return flowNode({ ...prompt, prompt: true });
+      return flowNode({ ...prompt, action, active: !acknowledged, selected: acknowledged, prompt: true });
     }
 
     function bindFlowActions() {
@@ -2911,15 +2973,22 @@
             state.timing = value;
             state.trigger = null;
             state.examResult = null;
+            state.promptAck = null;
             state.finding = null;
           }
           if (type === "trigger") {
             state.trigger = value;
             state.examResult = null;
+            state.promptAck = null;
+            state.finding = null;
+          }
+          if (type === "prompt") {
+            state.promptAck = value;
             state.finding = null;
           }
           if (type === "exam") {
             state.examResult = value;
+            state.promptAck = null;
             state.finding = null;
           }
           if (type === "finding") {
@@ -2944,10 +3013,12 @@
 
         if (selectedSyndrome === "tev") {
           if (!state.examResult && !state.finding) {
+            const ready = state.promptAck === promptKeyForSyndrome("tev", "dh");
             return `<div class="flow-connector"><span></span><span></span></div>
               <div class="flow-row one">
-                ${examPromptForSyndrome("tev", "dh")}
+                ${examPromptForSyndrome("tev", "dh", ready)}
               </div>
+              ${ready ? `
               <div class="flow-row three">
                 ${flowNode({
                   title: "Dix-Hallpike positive: typical nystagmus",
@@ -2973,14 +3044,16 @@
                   active: true,
                   final: true
                 })}
-              </div>`;
+              </div>` : ""}`;
           }
 
           if (state.examResult === "dh-negative" && !state.finding) {
+            const ready = state.promptAck === promptKeyForSyndrome("tev", "orthostatic");
             return `<div class="flow-connector"><span></span><span></span></div>
               <div class="flow-row one">
-                ${examPromptForSyndrome("tev", "orthostatic")}
+                ${examPromptForSyndrome("tev", "orthostatic", ready)}
               </div>
+              ${ready ? `
               <div class="flow-row three">
                 ${flowNode({
                   title: "Orthostatic vital signs positive",
@@ -3006,7 +3079,7 @@
                   active: true,
                   final: true
                 })}
-              </div>`;
+              </div>` : ""}`;
           }
 
           const selectedItem = findings.tev.find(item => item.id === state.finding);
@@ -3014,7 +3087,7 @@
           const promptPhase = state.examResult === "dh-negative" ? "orthostatic" : "dh";
           return `<div class="flow-connector"><span></span><span></span></div>
             <div class="flow-row one">
-              ${examPromptForSyndrome("tev", promptPhase)}
+              ${examPromptForSyndrome("tev", promptPhase, true)}
             </div>
             <div class="flow-row one">
               ${flowNode({
@@ -3039,13 +3112,15 @@
           final: true
         })).join("");
         const item = selectedFinding();
+        const ready = state.promptAck === promptKeyForSyndrome(selectedSyndrome) || Boolean(state.finding);
 
         return `<div class="flow-connector"><span></span><span></span></div>
           <div class="flow-row one">
-            ${examPromptForSyndrome(selectedSyndrome)}
+            ${examPromptForSyndrome(selectedSyndrome, "initial", ready)}
           </div>
+          ${ready ? `
           <div class="flow-row four">${nodes}</div>
-          ${state.finding ? renderTreatmentNode(item) : ""}`;
+          ${state.finding ? renderTreatmentNode(item) : ""}` : ""}`;
       }
 
       algorithmStrip.innerHTML = `<div class="flowchart" aria-label="Interactive TiTrATE flowchart">
@@ -3183,6 +3258,9 @@
         const treatment = treatmentForFinding(item);
         stageTitle.textContent = "Review the tests / treatment step.";
         stageSubtitle.textContent = `${item.label}: ${treatment ? `${treatment[0]} - ${treatment[1]}` : "Use the recommended next step for this TiTrATE endpoint."}`;
+      } else if (id !== "tev" && state.promptAck !== promptKeyForSyndrome(id)) {
+        stageTitle.textContent = "Complete the required step first.";
+        stageSubtitle.textContent = "Tap the blue required history or exam card after completing it. The result choices will open only after that step is acknowledged.";
       } else {
         stageTitle.textContent = "Select the targeted finding that best fits.";
         stageSubtitle.textContent = `${syndrome.title}: ${syndrome.short} The next step is not a generic dizziness workup; it is the test or history set TiTrATE pairs with this syndrome.`;
@@ -3248,15 +3326,18 @@
         state.timing = null;
         state.trigger = null;
         state.examResult = null;
+        state.promptAck = null;
         state.finding = null;
       }
       if (stepIndex === 1) {
         state.trigger = null;
         state.examResult = null;
+        state.promptAck = null;
         state.finding = null;
       }
       if (stepIndex === 2) {
         state.examResult = null;
+        state.promptAck = null;
         state.finding = null;
       }
       showView("algorithm");
@@ -3265,7 +3346,7 @@
     }
 
     function canGoBack() {
-      return Boolean(state.timing || state.trigger || state.examResult || state.finding);
+      return Boolean(state.timing || state.trigger || state.examResult || state.promptAck || state.finding);
     }
 
     function updateBackButton() {
@@ -3275,7 +3356,12 @@
     function goBackOneDecision() {
       if (state.finding) {
         state.finding = null;
+      } else if (state.promptAck) {
+        state.promptAck = null;
       } else if (state.examResult) {
+        if (state.examResult === "dh-negative") {
+          state.promptAck = promptKeyForSyndrome("tev", "dh");
+        }
         state.examResult = null;
       } else if (state.trigger) {
         state.trigger = null;
@@ -3345,6 +3431,7 @@
       state.timing = null;
       state.trigger = null;
       state.examResult = null;
+      state.promptAck = null;
       state.finding = null;
       showView("algorithm");
       render();
