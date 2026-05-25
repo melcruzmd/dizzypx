@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Approach to the Dizzy Patient</title>
+  <title>Approaching the Dizzy Patient</title>
   <style>
     :root {
       --bg-1: #eaf5f7;
@@ -1562,6 +1562,18 @@
       line-height: 1.45;
     }
 
+    .severity-footer {
+      margin-top: 18px;
+      padding: 16px 18px;
+    }
+
+    .legend-intro {
+      margin: -4px 0 12px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
     .site-footer strong {
       color: var(--teal-dark);
     }
@@ -2116,12 +2128,14 @@
       .stage,
       .resource-panel,
       .resource-card,
+      .severity-footer,
       .site-footer {
         border-radius: var(--radius-sm);
       }
 
       .rail,
       .resource-panel,
+      .severity-footer,
       .resource-card {
         padding: 12px;
       }
@@ -2183,7 +2197,7 @@
           </svg>
         </div>
         <div>
-          <h1>Approach to the Dizzy Patient</h1>
+          <h1>Approaching the Dizzy Patient</h1>
           <p>Using the TiTrATE algorithm for recent-onset dizziness: timing, triggers, and targeted bedside examination.</p>
         </div>
       </div>
@@ -2452,6 +2466,16 @@
           <li>Saber Tehrani AS, Kattah JC, et al. Diagnosing Stroke in Acute Dizziness and Vertigo: Pitfalls and Pearls. <a href="https://pubmed.ncbi.nlm.nih.gov/28964837/" target="_blank" rel="noreferrer">Stroke. 2018</a>.</li>
           <li>Kattah JC, Talkad AV, Wang DZ, Hsieh YH, Newman-Toker DE. HINTS to diagnose stroke in acute vestibular syndrome. <a href="https://pubmed.ncbi.nlm.nih.gov/19762709/" target="_blank" rel="noreferrer">Stroke. 2009</a>.</li>
         </ol>
+      </div>
+    </section>
+
+    <section class="severity-footer glass" aria-label="Routine caution urgent legend">
+      <h2 class="panel-title">Result Key</h2>
+      <p class="legend-intro">These labels describe the suggested level of follow-up after the TiTrATE branch reaches an endpoint.</p>
+      <div class="severity-legend">
+        <div class="severity-key routine"><strong>Routine</strong><span>Expected outpatient or bedside treatment pathway.</span></div>
+        <div class="severity-key caution"><strong>Caution</strong><span>Needs careful review, follow-up, or additional workup.</span></div>
+        <div class="severity-key urgent"><strong>Urgent</strong><span>Possible serious central, vascular, traumatic, or systemic cause.</span></div>
       </div>
     </section>
 
@@ -2911,11 +2935,7 @@
     }
 
     function renderSeverityLegend() {
-      return `<div class="severity-legend" aria-label="Severity key">
-        <div class="severity-key routine"><strong>Routine</strong><span>Expected outpatient or bedside treatment pathway.</span></div>
-        <div class="severity-key caution"><strong>Caution</strong><span>Needs careful review, follow-up, or additional workup.</span></div>
-        <div class="severity-key urgent"><strong>Urgent</strong><span>Possible serious central, vascular, traumatic, or systemic cause.</span></div>
-      </div>`;
+      return "";
     }
 
     function allFindings() {
@@ -3239,7 +3259,6 @@
           </div>
           ${targetedNodes()}` : ""}
         <p class="flow-hint">Yellow boxes are the next decision. Teal boxes are selected. Gray boxes are alternate branches you can revisit.</p>
-        ${renderSeverityLegend()}
       </div>`;
       bindFlowActions();
     }
