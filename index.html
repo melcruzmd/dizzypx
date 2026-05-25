@@ -822,6 +822,29 @@
       border: 1px solid rgba(40, 111, 170, 0.16);
     }
 
+    .flow-node.severity-routine .flow-chip {
+      color: #175f4d;
+      background: rgba(231, 250, 239, 0.88);
+      border: 1px solid rgba(35, 133, 108, 0.18);
+    }
+
+    .flow-node.severity-caution .flow-chip {
+      color: #67440e;
+      background: rgba(255, 244, 215, 0.92);
+      border: 1px solid rgba(201, 130, 29, 0.22);
+    }
+
+    .flow-node.severity-urgent .flow-chip {
+      color: #8a2d2d;
+      background: rgba(255, 235, 235, 0.94);
+      border: 1px solid rgba(196, 78, 78, 0.22);
+    }
+
+    .flow-node.severity-urgent.active {
+      border-color: rgba(196, 78, 78, 0.54);
+      background: rgba(255, 241, 232, 0.94);
+    }
+
     .flow-node strong {
       display: block;
       font-size: 0.98rem;
@@ -849,6 +872,55 @@
       font-weight: 820;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+    }
+
+    .severity-legend {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.44);
+    }
+
+    .severity-key {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.58);
+    }
+
+    .severity-key strong {
+      color: var(--ink);
+      font-size: 0.68rem;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .severity-key span {
+      color: var(--ink-soft);
+      font-size: 0.7rem;
+      line-height: 1.25;
+    }
+
+    .severity-key.routine {
+      border-color: rgba(35, 133, 108, 0.28);
+      background: rgba(231, 250, 239, 0.66);
+    }
+
+    .severity-key.caution {
+      border-color: rgba(201, 130, 29, 0.30);
+      background: rgba(255, 248, 226, 0.74);
+    }
+
+    .severity-key.urgent {
+      border-color: rgba(196, 78, 78, 0.30);
+      background: rgba(255, 235, 235, 0.74);
     }
 
     .flow-hint {
@@ -1574,6 +1646,28 @@
       border-radius: var(--radius-sm);
     }
 
+    body[data-layout="mobile"] .severity-legend {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding: 5px;
+    }
+
+    body[data-layout="mobile"] .severity-key {
+      grid-template-columns: 70px minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+      padding: 5px 7px;
+    }
+
+    body[data-layout="mobile"] .severity-key strong {
+      font-size: 0.58rem;
+    }
+
+    body[data-layout="mobile"] .severity-key span {
+      font-size: 0.62rem;
+      line-height: 1.15;
+    }
+
     body[data-layout="mobile"] button.flow-node {
       padding-right: 60px;
     }
@@ -1592,16 +1686,42 @@
       min-height: 46px;
     }
 
+    body[data-layout="mobile"] .flow-node.selected:not(.treatment):not(.prompt) {
+      min-height: 42px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      border-left-width: 4px;
+    }
+
+    body[data-layout="mobile"] .flow-node.inactive {
+      min-height: 34px;
+      padding: 5px 54px 5px 7px;
+      opacity: 0.34;
+    }
+
+    body[data-layout="mobile"] .flow-node.inactive .flow-chip {
+      display: none;
+    }
+
+    body[data-layout="mobile"] .flow-node.inactive strong {
+      font-size: 0.66rem;
+      line-height: 1.05;
+    }
+
     body[data-layout="mobile"] .flow-node.active {
-      min-height: 52px;
+      min-height: 66px;
+      padding-top: 9px;
+      padding-bottom: 9px;
     }
 
     body[data-layout="mobile"] .flow-node.prompt {
+      min-height: 76px;
       padding-right: 9px;
       border-style: dashed;
     }
 
     body[data-layout="mobile"] .flow-node.treatment {
+      min-height: 112px;
       padding: 10px;
       gap: 5px;
     }
@@ -2067,6 +2187,9 @@
             <li><strong>Timing</strong><span>Classify the dizziness by duration and pattern: episodic attacks versus continuous symptoms lasting hours to days.</span></li>
             <li><strong>Triggers</strong><span>A true trigger reliably starts an attack from baseline. Movement that merely worsens ongoing dizziness is an exacerbator.</span></li>
             <li><strong>Targeted exam</strong><span>The bedside test depends on the vestibular syndrome: positional tests for triggered episodic cases, HINTS-family exam for acute vestibular syndrome.</span></li>
+            <li><strong>Routine</strong><span>Likely fits an expected bedside treatment or outpatient pathway when the syndrome and exam are typical.</span></li>
+            <li><strong>Caution</strong><span>Requires careful review, follow-up, reclassification, or additional testing because the story or exam is less straightforward.</span></li>
+            <li><strong>Urgent</strong><span>Raises concern for a serious central, vascular, traumatic, infectious, or systemic cause and should prompt urgent evaluation through local emergency or specialty pathways.</span></li>
             <li><strong>ABCD2 risk factors</strong><span>Age 60 years or older, blood pressure at presentation at least 140 systolic or 90 diastolic, clinical features of unilateral weakness or speech disturbance, symptom duration, and diabetes. Scores range from 0 to 7; in the TiTrATE map, ABCD2 greater than 3 increases concern for TIA/stroke workup.</span></li>
           </ul>
         </div>
@@ -2658,7 +2781,8 @@
     function flowNode({ title, text, chip, action, selected, active, inactive, final, treatment, prompt }) {
       const tag = action ? "button" : "div";
       const actionAttr = action ? ` type="button" data-flow-action="${action}"` : "";
-      return `<${tag}${actionAttr} class="flow-node ${selected ? "selected" : ""} ${active ? "active" : ""} ${inactive ? "inactive" : ""} ${final ? "final" : ""} ${treatment ? "treatment" : ""} ${prompt ? "prompt" : ""}">
+      const severity = ["routine", "caution", "urgent"].includes(String(chip).toLowerCase()) ? `severity-${String(chip).toLowerCase()}` : "";
+      return `<${tag}${actionAttr} class="flow-node ${selected ? "selected" : ""} ${active ? "active" : ""} ${inactive ? "inactive" : ""} ${final ? "final" : ""} ${treatment ? "treatment" : ""} ${prompt ? "prompt" : ""} ${severity}">
         <span class="flow-chip">${chip}</span>
         <strong>${title}</strong>
         <span>${text}</span>
@@ -2680,6 +2804,14 @@
             ${step.title}
           </div>
         `).join("")}
+      </div>`;
+    }
+
+    function renderSeverityLegend() {
+      return `<div class="severity-legend" aria-label="Severity key">
+        <div class="severity-key routine"><strong>Routine</strong><span>Expected outpatient or bedside treatment pathway.</span></div>
+        <div class="severity-key caution"><strong>Caution</strong><span>Needs careful review, follow-up, or additional workup.</span></div>
+        <div class="severity-key urgent"><strong>Urgent</strong><span>Possible serious central, vascular, traumatic, or systemic cause.</span></div>
       </div>`;
     }
 
@@ -2918,6 +3050,7 @@
 
       algorithmStrip.innerHTML = `<div class="flowchart" aria-label="Interactive TiTrATE flowchart">
         ${renderPhaseStrip()}
+        ${renderSeverityLegend()}
         <div class="flow-row one start-row">
           ${flowNode({
             title: "Recent-onset dizziness",
@@ -3226,4 +3359,3 @@
   </script>
 </body>
 </html>
-
